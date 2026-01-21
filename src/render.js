@@ -107,17 +107,17 @@ function drawPlayer(ctx, position) {
 }
 
 function axialToPixel(q, r, size) {
-  // Flat-top axial to pixel
-  const x = size * (1.5 * q);
-  const y = size * ((SQRT_3 / 2) * q + SQRT_3 * r);
+  // Pointy-top axial to pixel (taller hexes)
+  const x = size * (SQRT_3 * q + (SQRT_3 / 2) * r);
+  const y = size * (1.5 * r);
   return { x, y };
 }
 
 function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
   const corners = [];
   for (let i = 0; i < 6; i++) {
-    // Flat-top hexes start at 0 degrees
-    const angle = (Math.PI / 180) * (60 * i);
+    // Pointy-top hexes start at 30 degrees
+    const angle = (Math.PI / 180) * (60 * i + 30);
     corners.push({
       x: x + size * Math.cos(angle),
       y: y + size * Math.sin(angle),

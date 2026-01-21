@@ -32,7 +32,9 @@ Single source of truth for this project. Keep concise and current.
 - Win/Lose: win by defeating final boss; lose if any enemy reaches center
 - Knockout: player dies if an enemy enters their hex
 - View: 2D isometric (possible future map rotation)
+- Board orientation: pointy-top hexes; overall board silhouette should read as flat-top.
 
 ## Recent Updates
 - 2026-01-21: Set initial stack and backend direction.
 - 2026-01-21: Captured core gameplay loop and boardgame-derived structure.
+- 2026-01-21: Clarified hex orientation (pointy-top tiles, flat-top board silhouette).

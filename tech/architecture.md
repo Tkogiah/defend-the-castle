@@ -23,8 +23,8 @@
 - Draws hex grid, units, UI overlay, hand, and panels.
 - Isometric projection helper for hex -> screen coords.
 - Rendering notes:
-  - Flat-top hexes (axial-to-pixel uses flat-top math).
-  - Hex corners start at 0° for flat-top orientation.
+  - Pointy-top hexes (axial-to-pixel uses pointy-top math).
+  - Hex corners start at 30° for pointy-top orientation.
   - DPR scaling: clear with canvas.width/height; center using CSS pixels.
   - MVP camera model: pan is screen-space (do not divide by zoom). Revisit if we move to world-space camera post-MVP.
 
