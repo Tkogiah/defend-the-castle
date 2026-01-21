@@ -13,6 +13,13 @@ Single source of truth for this project. Keep concise and current.
 3) Apply the approved update to this file with today’s date.
 4) If it’s high-level architecture, reflect it in specs as needed.
 
+## Briefing Checklist (for agent tasks)
+- Working directory (absolute path).
+- Files allowed (absolute paths).
+- Scope type: data-only vs logic-only vs rendering-only vs input-only.
+- MVP-only guardrail + any non-negotiables (e.g., flat-top hexes, DPR handling).
+- Expected outputs (summary, files touched, open questions, risks).
+
 ## Current Snapshot
 - Concept: Co-op fantasy deck-building tower defense on a hex map; defend central castle vs waves
 - Stack: HTML, CSS, JavaScript, Canvas 2D
