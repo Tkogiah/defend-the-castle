@@ -26,6 +26,7 @@
   - Flat-top hexes (axial-to-pixel uses flat-top math).
   - Hex corners start at 0° for flat-top orientation.
   - DPR scaling: clear with canvas.width/height; center using CSS pixels.
+  - MVP camera model: pan is screen-space (do not divide by zoom). Revisit if we move to world-space camera post-MVP.
 
 4) Input Controller
 - Mouse interactions for selecting units, cards, target hexes.
