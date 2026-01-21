@@ -1,0 +1,142 @@
+/**
+ * render.js - Canvas rendering for hex grid and game entities
+ * Pure rendering only - no DOM events or input handling.
+ *
+ * CHANGE LOG:
+ * -----------
+ * 2026-01-21: Center the Grid at Hex (0,0)
+ *
+ * Summary of changes:
+ * - Simplified renderFrame centering logic. Since axialToPixel(0, 0) returns
+ *   pixel (0, 0), translating to canvas center directly centers hex (0,0).
+ * - Removed getGridBounds function (no longer needed).
+ *
+ * Files touched:
+ * - /Users/tkogiah/ai-workspace/defend-the-castle/src/render.js
+ *
+ * Open questions:
+ * - None.
+ *
+ * Risks / caveats:
+ * - If pan/zoom behavior was relying on bounds-based centering for other
+ *   purposes, that would need separate handling. Current implementation
+ *   assumes pan starts at 0,0 and zoom centers on hex (0,0).
+ *
+ * Code removed:
+ * -------------
+ * function getGridBounds(hexGrid) {
+ *   let minX = Infinity;
+ *   let minY = Infinity;
+ *   let maxX = -Infinity;
+ *   let maxY = -Infinity;
+ *
+ *   for (const hex of hexGrid.values()) {
+ *     const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
+ *     minX = Math.min(minX, x - HEX_SIZE);
+ *     minY = Math.min(minY, y - HEX_SIZE);
+ *     maxX = Math.max(maxX, x + HEX_SIZE);
+ *     maxY = Math.max(maxY, y + HEX_SIZE);
+ *   }
+ *
+ *   return { minX, minY, maxX, maxY };
+ * }
+ *
+ * Code before (renderFrame):
+ * --------------------------
+ * const gridBounds = getGridBounds(state.hexGrid);
+ * const gridCenter = {
+ *   x: (gridBounds.minX + gridBounds.maxX) / 2,
+ *   y: (gridBounds.minY + gridBounds.maxY) / 2,
+ * };
+ * ctx.save();
+ * ctx.translate(width / 2 + view.panX, height / 2 + view.panY);
+ * ctx.scale(view.zoom, view.zoom);
+ * ctx.translate(-gridCenter.x, -gridCenter.y);
+ *
+ * Code after (renderFrame):
+ * -------------------------
+ * ctx.save();
+ * ctx.translate(width / 2 + view.panX, height / 2 + view.panY);
+ * ctx.scale(view.zoom, view.zoom);
+ */
+
+import { ringIndex } from './hex.js';
+
+const SQRT_3 = Math.sqrt(3);
+const HEX_SIZE = 28;
+
+export function renderFrame(ctx, canvas, state, view) {
+  const rect = canvas.getBoundingClientRect();
+  const cssWidth = rect.width;
+  const cssHeight = rect.height;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#121a17';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Center hex (0,0) at canvas center.
+  // axialToPixel(0,0) returns (0,0), so translating to canvas center aligns it.
+  ctx.save();
+  ctx.translate(cssWidth / 2 + view.panX, cssHeight / 2 + view.panY);
+  ctx.scale(view.zoom, view.zoom);
+
+  drawGrid(ctx, state.hexGrid);
+  drawPlayer(ctx, state.player.position);
+
+  ctx.restore();
+}
+
+function drawGrid(ctx, hexGrid) {
+  for (const hex of hexGrid.values()) {
+    const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
+    const ring = ringIndex(hex.q, hex.r);
+    const stroke = ring === 0 ? '#d9b86c' : ring === 5 ? '#3e6b5b' : '#2e4b42';
+    drawHex(ctx, x, y, HEX_SIZE, stroke, null);
+  }
+}
+
+function drawPlayer(ctx, position) {
+  const { x, y } = axialToPixel(position.q, position.r, HEX_SIZE);
+  ctx.fillStyle = '#d98a5f';
+  ctx.beginPath();
+  ctx.arc(x, y, HEX_SIZE * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2b1a12';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function axialToPixel(q, r, size) {
+  // Flat-top axial to pixel
+  const x = size * (1.5 * q);
+  const y = size * ((SQRT_3 / 2) * q + SQRT_3 * r);
+  return { x, y };
+}
+
+function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
+  const corners = [];
+  for (let i = 0; i < 6; i++) {
+    // Flat-top hexes start at 0 degrees
+    const angle = (Math.PI / 180) * (60 * i);
+    corners.push({
+      x: x + size * Math.cos(angle),
+      y: y + size * Math.sin(angle),
+    });
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  for (let i = 1; i < corners.length; i++) {
+    ctx.lineTo(corners[i].x, corners[i].y);
+  }
+  ctx.closePath();
+
+  if (fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}

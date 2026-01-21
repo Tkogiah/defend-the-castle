@@ -22,6 +22,10 @@
 3) Renderer
 - Draws hex grid, units, UI overlay, hand, and panels.
 - Isometric projection helper for hex -> screen coords.
+- Rendering notes:
+  - Flat-top hexes (axial-to-pixel uses flat-top math).
+  - Hex corners start at 0° for flat-top orientation.
+  - DPR scaling: clear with canvas.width/height; center using CSS pixels.
 
 4) Input Controller
 - Mouse interactions for selecting units, cards, target hexes.
