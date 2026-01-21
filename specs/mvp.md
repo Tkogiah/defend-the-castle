@@ -16,6 +16,8 @@
 - Player may also move counter-clockwise to return toward center (same path, reverse direction)
 - Flat labeling (pointy-top): A=upper-right (NE), B=right, C=down-right, D=down-left, E=left, F=up-left
 - Input: click-to-move for mouse/touch; step-by-step movement for keyboard
+- Path system: a single spiral path labels hexes 0..90; movement is along label ±1
+- Enemy movement: starts at label 90 and moves counter-clockwise along the same path
 
 ## Cards (MVP)
 - 1 basic "Action" card (choose attack or movement per card)

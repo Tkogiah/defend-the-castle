@@ -60,10 +60,12 @@
  * ctx.scale(view.zoom, view.zoom);
  */
 
-import { ringIndex } from './hex.js';
+import { ringIndex, generateRadialSpiralAxial, hexKey } from './hex.js';
 
 const SQRT_3 = Math.sqrt(3);
 const HEX_SIZE = 28;
+const HUE_RANGE = 360;
+const SPIRAL = generateRadialSpiralAxial(5);
 
 export function renderFrame(ctx, canvas, state, view) {
   const rect = canvas.getBoundingClientRect();
@@ -91,7 +93,12 @@ function drawGrid(ctx, hexGrid) {
     const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
     const ring = ringIndex(hex.q, hex.r);
     const stroke = ring === 0 ? '#d9b86c' : ring === 5 ? '#3e6b5b' : '#2e4b42';
-    drawHex(ctx, x, y, HEX_SIZE, stroke, null);
+    const label = SPIRAL.axialToNum.get(hexKey(hex.q, hex.r));
+    const color = typeof label === 'number'
+      ? hslToHex((label / SPIRAL.maxLabel) * HUE_RANGE, 80, 55)
+      : null;
+    const fill = color ? withAlpha(shadeByRing(color, ring), 0.3) : null;
+    drawHex(ctx, x, y, HEX_SIZE, stroke, fill);
   }
 }
 
@@ -139,4 +146,47 @@ function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = 1;
   ctx.stroke();
+}
+
+function withAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function shadeByRing(hex, ring) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const factor = Math.max(0.55, 1 - ring * 0.08);
+  const nr = Math.round(r * factor);
+  const ng = Math.round(g * factor);
+  const nb = Math.round(b * factor);
+  return `#${toHex(nr)}${toHex(ng)}${toHex(nb)}`;
+}
+
+function toHex(value) {
+  return value.toString(16).padStart(2, '0');
+}
+
+function hslToHex(h, s, l) {
+  const sat = s / 100;
+  const light = l / 100;
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = light - c / 2;
+  let r = 0, g = 0, b = 0;
+
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+
+  const nr = Math.round((r + m) * 255);
+  const ng = Math.round((g + m) * 255);
+  const nb = Math.round((b + m) * 255);
+  return `#${toHex(nr)}${toHex(ng)}${toHex(nb)}`;
 }

@@ -28,6 +28,12 @@
   - DPR scaling: clear with canvas.width/height; center using CSS pixels.
   - MVP camera model: pan is screen-space (do not divide by zoom). Revisit if we move to world-space camera post-MVP.
 
+## Path System (MVP)
+- Movement uses a single spiral path labeling hexes 0..90.
+- Player movement: label +/- 1 (clockwise/counter-clockwise).
+- Enemy movement: starts at label 90 and moves counter-clockwise along the same path.
+- Dragon Mount bypasses path constraints (any adjacent hex).
+
 4) Input Controller
 - Mouse interactions for selecting units, cards, target hexes.
 - Keyboard shortcuts later (optional).
