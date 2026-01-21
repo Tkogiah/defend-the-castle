@@ -44,4 +44,4 @@ Track agent briefs, dates, and outcomes so context can be restored quickly and d
 - Files: src/input.js, src/main.js, styles.css
 - Agent(s): Claude, Gemini
 - Outcome: Claude's approach adopted (pinch + cursor-centered zoom + pan).
-- Follow-ups: Review pointer/touch edge cases and clamp behavior.
+- Follow-ups: Keep pan in screen-space for MVP (no divide by zoom); revisit if camera becomes world-space post-MVP.
