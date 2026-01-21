@@ -44,12 +44,12 @@ export function ringIndex(q, r) {
 // -----------------------------
 
 const AXIAL_DIRECTIONS = Object.freeze([
-  Object.freeze({ q: +1, r: 0 }),
-  Object.freeze({ q: +1, r: -1 }),
-  Object.freeze({ q: 0, r: -1 }),
-  Object.freeze({ q: -1, r: 0 }),
-  Object.freeze({ q: -1, r: +1 }),
-  Object.freeze({ q: 0, r: +1 }),
+  Object.freeze({ q: +1, r: 0 }),  // E
+  Object.freeze({ q: +1, r: -1 }), // NE
+  Object.freeze({ q: 0, r: -1 }),  // NW
+  Object.freeze({ q: -1, r: 0 }),  // W
+  Object.freeze({ q: -1, r: +1 }), // SW
+  Object.freeze({ q: 0, r: +1 }),  // SE
 ]);
 
 export function getNeighborOffsets() {
