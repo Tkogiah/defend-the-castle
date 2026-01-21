@@ -27,6 +27,7 @@ Single source of truth for this project. Keep concise and current.
 - Core loop: play cards → move/attack → collect crystals → return center → buy cards → repeat
 - Map: 91 hexes (center + 5 rings); players can traverse outward or inward
 - Movement: fixed clockwise path; no free movement (except mounts like Dragon)
+- Movement: counter-clockwise also allowed to return to center (same path, reverse direction)
 - Waves: 10 waves × 10 enemies, boss at end of each wave
 - Economy: crystals dropped by enemies; spent at center on cards
 - Gear: boss loot grants non-deck abilities; tradable on same hex

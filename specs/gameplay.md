@@ -13,6 +13,7 @@ Co-op fantasy heroes defend a central castle against waves while building a deck
 - Enemies spawn at outer ring and move inward
 - Players start at center hex and traverse outward OR INWARD
 - Player movement follows a fixed clockwise path (not free movement)
+- Player may also move counter-clockwise to return toward center (same path, reverse direction)
 - Flat labeling (pointy-top): A=upper-right (NE), B=right, C=down-right, D=down-left, E=left, F=up-left
 
 ## Win/Lose
