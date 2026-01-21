@@ -14,6 +14,7 @@
 - Hybrid real-time within-hex feel is first upgrade after MVP
 - Player movement follows a fixed clockwise path (not free movement)
 - Flat labeling (pointy-top): A=upper-right (NE), B=right, C=down-right, D=down-left, E=left, F=up-left
+- Input: click-to-move for mouse/touch; step-by-step movement for keyboard
 
 ## Cards (MVP)
 - 1 basic "Action" card (choose attack or movement per card)
