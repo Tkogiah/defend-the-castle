@@ -12,6 +12,8 @@
 - Discrete hex-to-hex movement (movement points)
 - Enemies move a random number of hexes each turn (1–10)
 - Hybrid real-time within-hex feel is first upgrade after MVP
+- Player movement follows a fixed clockwise path (not free movement)
+- Flat labeling (pointy-top): A=upper-right (NE), B=right, C=down-right, D=down-left, E=left, F=up-left
 
 ## Cards (MVP)
 - 1 basic "Action" card (choose attack or movement per card)
