@@ -14,6 +14,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Implement basic turn progression (player -> enemies -> check win/lose).
 
 ## Later
+- Extract a reusable AI-agent context framework from this project (roles, read order, guardrails) so it can be reused like functions across other codebases; goal is to avoid re-writing context and treat agent setup as portable building blocks.
 - Multiplayer architecture spike (WebSockets).
 - Hybrid real-time within-hex movement (post-MVP).
 - Add stealth mode to allow moving past enemies via gear (post-MVP).
