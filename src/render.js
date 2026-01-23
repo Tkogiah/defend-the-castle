@@ -61,11 +61,11 @@
  */
 
 import { ringIndex, generateRadialSpiralAxial, hexKey } from './hex.js';
+import { HEX_SIZE, BOARD_RADIUS } from './config.js';
 
 const SQRT_3 = Math.sqrt(3);
-const HEX_SIZE = 28;
 const HUE_RANGE = 360;
-const SPIRAL = generateRadialSpiralAxial(5);
+const SPIRAL = generateRadialSpiralAxial(BOARD_RADIUS);
 
 export function renderFrame(ctx, canvas, state, view) {
   const rect = canvas.getBoundingClientRect();

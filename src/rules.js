@@ -22,7 +22,10 @@ import {
   incrementEnemiesDefeated,
   updateWave,
   setEnemyPosition,
+  setPlayerPosition,
+  setPlayerMovementPoints,
 } from './state.js';
+import { getSpiralLabel } from './hex.js';
 
 // -----------------------------
 // Deck Operations
@@ -77,6 +80,7 @@ export function startPlayerTurn(state) {
 
 export function endPlayerTurn(state) {
   let newState = discardHand(state);
+  newState = setPlayerMovementPoints(newState, 0);
   newState = setPhase(newState, 'enemyTurn');
   return newState;
 }
@@ -149,9 +153,31 @@ export function playActionCard(state, cardId, choice) {
 }
 
 export function movePlayer(state, targetPosition) {
-  // Stub: validate move and update position
-  // Movement validation to be implemented (range, path, etc.)
-  return state;
+  if (!targetPosition) return state;
+
+  const key = `${targetPosition.q},${targetPosition.r}`;
+  if (!state.hexGrid.has(key)) return state;
+
+  const start = state.player.position;
+  const startLabel = getSpiralLabel(start.q, start.r);
+  const targetLabel = getSpiralLabel(targetPosition.q, targetPosition.r);
+  if (startLabel === null || targetLabel === null) return state;
+
+  const steps = Math.abs(targetLabel - startLabel);
+  const movementPoints = Number.isInteger(state.player.movementPoints)
+    ? state.player.movementPoints
+    : 0;
+  if (steps > movementPoints) return state;
+
+  for (const enemy of state.enemies) {
+    if (enemy.position.q === targetPosition.q && enemy.position.r === targetPosition.r) {
+      return state;
+    }
+  }
+
+  let newState = setPlayerPosition(state, targetPosition);
+  newState = setPlayerMovementPoints(newState, movementPoints - steps);
+  return newState;
 }
 
 export function attackEnemy(state, enemyId) {

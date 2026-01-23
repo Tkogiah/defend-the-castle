@@ -6,3 +6,5 @@ Use this for sketches, questions, and quick captures.
 ## Template
 ## YYYY-MM-DD
 - Note:
+## 2026-01-23
+- Note: Dragon Mount (free adjacency move) should use click-to-move only for MVP; keyboard directional input is path-bound and should not control Dragon movement.

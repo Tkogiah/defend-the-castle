@@ -34,6 +34,7 @@ export function createInitialState(hexGrid = new Map()) {
     player: {
       position: { q: 0, r: 0 }, // axial coords, starts at center
       baseMovement: 3,
+      movementPoints: 100, // TESTING ONLY: remove when action-card movement is wired
       baseDamage: 10,
       range: 1,
       gold: 0,
@@ -99,6 +100,10 @@ export function setPlayerPosition(state, position) {
     ...state,
     player: { ...state.player, position: { ...position } },
   };
+}
+
+export function setPlayerMovementPoints(state, movementPoints) {
+  return { ...state, player: { ...state.player, movementPoints } };
 }
 
 export function setPlayerGold(state, gold) {

@@ -29,6 +29,14 @@ Single source of truth for this project. Keep concise and current.
 - Movement: fixed clockwise path; no free movement (except mounts like Dragon)
 - Movement: counter-clockwise also allowed to return to center (same path, reverse direction)
 - Path: single spiral labels hexes 0..90; players move along label ±1; enemies start at label 90 and move counter-clockwise
+- Movement: path follows the rainbow gradient color fill across hexes (entire map path)
+- Movement: spiral path source is `generateRadialSpiralAxial(5)` in `src/hex.js` and the rainbow gradient render in `src/render.js` uses the same label order
+- Movement: points spent per hex; player may stop early and can move/attack in any order until actions are spent
+- Movement: player may pass through enemy hexes but cannot end on enemy hex; if enemy reaches player hex, player dies
+- Movement: players can share hexes with other players for gear trading; movement is never blocked
+- Input: click-to-move up to available movement points along path; keyboard supports step-by-step movement
+- Animation: movement is step-by-step animated in MVP
+- Movement feel: player can move within a hex; crossing a hex edge requires a small intentional delay to avoid accidental transitions (after isometric visuals)
 - Waves: 10 waves × 10 enemies, boss at end of each wave
 - Economy: crystals dropped by enemies; spent at center on cards
 - Gear: boss loot grants non-deck abilities; tradable on same hex
@@ -36,8 +44,13 @@ Single source of truth for this project. Keep concise and current.
 - Knockout: player dies if an enemy enters their hex
 - View: 2D isometric (possible future map rotation)
 - Board orientation: pointy-top hexes; overall board silhouette should read as flat-top.
+- Workflow: assistant acts as coordinator/reviewer/brief-writer; do not implement code unless explicitly asked
+- Workflow: other agents implement code; assistant reviews and connects changes
+- Workflow: code changes are committed and pushed to GitHub after approval
 
 ## Recent Updates
 - 2026-01-21: Set initial stack and backend direction.
 - 2026-01-21: Captured core gameplay loop and boardgame-derived structure.
 - 2026-01-21: Clarified hex orientation (pointy-top tiles, flat-top board silhouette).
+- 2026-01-23: Added detailed movement rules (path, input, animation, enemy interactions, actions).
+- 2026-01-23: Clarified assistant role as coordinator/reviewer/brief-writer and codified commit/push workflow.

@@ -7,7 +7,8 @@
  * Board radius is 5, yielding 91 hexes (1 + 6*15).
  */
 
-export const BOARD_RADIUS = 5;
+import { BOARD_RADIUS } from './config.js';
+const SPIRAL_CACHE = new Map();
 
 // -----------------------------
 // Key / Coordinate Helpers
@@ -210,6 +211,26 @@ export function generateRadialSpiralAxial(radius = BOARD_RADIUS) {
   }
 
   return { radius, count, maxLabel, numToAxial, axialToNum, ordered };
+}
+
+export function getSpiralData(radius = BOARD_RADIUS) {
+  if (SPIRAL_CACHE.has(radius)) return SPIRAL_CACHE.get(radius);
+  const data = generateRadialSpiralAxial(radius);
+  SPIRAL_CACHE.set(radius, data);
+  return data;
+}
+
+export function getSpiralLabel(q, r, radius = BOARD_RADIUS) {
+  const { axialToNum } = getSpiralData(radius);
+  const label = axialToNum.get(hexKey(q, r));
+  return Number.isInteger(label) ? label : null;
+}
+
+export function getSpiralAxial(label, radius = BOARD_RADIUS) {
+  const { numToAxial, maxLabel } = getSpiralData(radius);
+  if (!Number.isInteger(label) || label < 0 || label > maxLabel) return null;
+  const pos = numToAxial.get(label);
+  return pos ? { ...pos } : null;
 }
 
 function getRingHexesClockwise(k) {
