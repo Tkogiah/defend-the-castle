@@ -1,2 +1,2 @@
-export * from '../state.js';
-export * from '../rules.js';
+export * from './state.js';
+export * from './rules.js';

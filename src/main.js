@@ -1,8 +1,8 @@
-import { createInitialState } from './state.js';
+import { createInitialState } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import { renderFrame } from './render/index.js';
 import { setupInputControls } from './input/index.js';
-import { movePlayer } from './rules.js';
+import { movePlayer } from './core/index.js';
 import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
