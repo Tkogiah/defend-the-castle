@@ -7,6 +7,17 @@ Single source of truth for this project. Keep concise and current.
 - Update after decisions affecting gameplay, tech stack, or architecture.
 - Keep entries short and dated (YYYY-MM-DD).
 
+## Context Reload Template (for assistants)
+Use this checklist on session start or after reload.
+1) Read: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md (this file).
+2) Read: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md.
+3) Read: /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md (recent notes).
+4) Read: /Users/tkogiah/ai-workspace/defend-the-castle/TODO.md (current tasks).
+5) Read: /Users/tkogiah/ai-workspace/defend-the-castle/README.md (high-level framing).
+6) If folders are split, read each folder’s index.js to understand wiring.
+   - index.js files define module boundaries, wiring, and public APIs. Read these first in each folder.
+   - Smaller module files contain focused logic only.
+
 ## Context Update Review Workflow
 1) Propose the update in plain language (what changed + why).
 2) I confirm or revise the wording.
