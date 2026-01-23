@@ -5,6 +5,7 @@
 
 import { drawGrid } from './grid.js';
 import { drawPlayer, drawEnemies } from './entities.js';
+import { getMovementRange, drawMovementRange, drawAttackRange } from './overlays.js';
 
 /**
  * Render a single frame to the canvas.
@@ -28,8 +29,21 @@ export function renderFrame(ctx, canvas, state, view) {
   ctx.translate(cssWidth / 2 + view.panX, cssHeight / 2 + view.panY);
   ctx.scale(view.zoom, view.zoom);
 
-  // Draw game elements
+  // Draw game elements in order: grid → movement range → attack range → enemies → player
   drawGrid(ctx, state.hexGrid);
+
+  // Movement range overlay (blue fills)
+  const movementRange = getMovementRange(
+    state.player.position,
+    state.player.movementPoints,
+    state.enemies
+  );
+  drawMovementRange(ctx, movementRange);
+
+  // Attack range overlay (green outlines)
+  drawAttackRange(ctx, state.player.position);
+
+  // Entities
   drawEnemies(ctx, state.enemies);
   drawPlayer(ctx, state.player.position);
 

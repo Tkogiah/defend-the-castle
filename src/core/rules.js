@@ -81,7 +81,7 @@ export function startPlayerTurn(state) {
 export function endPlayerTurn(state) {
   let newState = discardHand(state);
   // TESTING ONLY: keep movement points replenished for loop testing.
-  newState = setPlayerMovementPoints(newState, 100);
+  newState = setPlayerMovementPoints(newState, 10);
   newState = setPhase(newState, 'enemyTurn');
   return newState;
 }

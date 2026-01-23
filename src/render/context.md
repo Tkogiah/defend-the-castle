@@ -17,6 +17,7 @@ Canvas rendering for hex grid, game entities, and UI elements.
 ## Key Files
 - `grid.js`: Hex grid drawing with spiral gradient fill. Contains color utilities.
 - `entities.js`: Player (and future enemy) rendering.
+- `overlays.js`: Movement/attack range overlays.
 - `util.js`: Shared coordinate conversion (`axialToPixel`).
 - `index.js`: Frame orchestration; exports public API.
 

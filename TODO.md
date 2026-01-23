@@ -7,7 +7,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Create core data definitions (cards, gear, enemies, shop).
 - Draft render and input flow for the MVP loop.
 - Remove temporary Enter key end-turn shortcut after UI button exists.
-- Remove temporary auto-reset of movementPoints to 100 (testing only).
+- Remove temporary auto-reset of movementPoints to 10 (testing only).
 
 ## Next
 - Build hex grid generation and coordinate conversions.
@@ -18,3 +18,4 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Hybrid real-time within-hex movement (post-MVP).
 - Add stealth mode to allow moving past enemies via gear (post-MVP).
 - Enable player-to-player gear trading when sharing a hex (post-MVP).
+- Add sweep attack (post-MVP): allow damage spread across enemies in one adjacent hex if weapon damage >= enemy count; remainder discarded.
