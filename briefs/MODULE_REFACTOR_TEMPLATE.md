@@ -1,5 +1,11 @@
 # Module Refactor Brief — Defend the Castle
 
+## Inputs / Context
+- /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
+- /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
+- /Users/tkogiah/ai-workspace/defend-the-castle/README.md
+- /Users/tkogiah/ai-workspace/defend-the-castle/src/<module>/context.md
+
 ## Task Title
 Refactor the <MODULE_NAME> module into a clean subfolder structure
 
@@ -18,12 +24,6 @@ Take ownership of one full module and break it into small, focused files with a 
 - Work inside one module folder only.
 - Keep API surface stable (unless changes are explicitly approved).
 - Follow project context and MVP constraints.
-
-## Inputs / Context
-- /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
-- /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
-- /Users/tkogiah/ai-workspace/defend-the-castle/README.md
-- /Users/tkogiah/ai-workspace/defend-the-castle/src/<module>/context.md
 
 ## Files/Areas Allowed
 - /Users/tkogiah/ai-workspace/defend-the-castle/src/<module>/ (including index.js + context.md)

@@ -1,5 +1,10 @@
 # Agent Task Brief — Defend the Castle
 
+## Inputs / Context
+- Project context: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
+- MVP spec: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
+- High-level framing: /Users/tkogiah/ai-workspace/defend-the-castle/README.md
+
 ## Task Title
 
 ## Goal (1–2 sentences)
@@ -12,11 +17,6 @@
 - Stay within listed files/areas.
 - Follow MVP decisions in README/CONTEXT unless explicitly overridden.
 - Provide a short plan first if the task is a refactor or spans multiple files.
-
-## Inputs / Context
-- Project context: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
-- MVP spec: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
-- High-level framing: /Users/tkogiah/ai-workspace/defend-the-castle/README.md
 
 ## Files/Areas Allowed
 - 
