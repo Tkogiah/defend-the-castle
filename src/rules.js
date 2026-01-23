@@ -25,7 +25,7 @@ import {
   setPlayerPosition,
   setPlayerMovementPoints,
 } from './state.js';
-import { getSpiralLabel } from './hex.js';
+import { getSpiralLabel } from './hex/index.js';
 
 // -----------------------------
 // Deck Operations

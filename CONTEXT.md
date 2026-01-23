@@ -58,6 +58,9 @@ Use this checklist on session start or after reload.
 - Workflow: assistant acts as coordinator/reviewer/brief-writer; do not implement code unless explicitly asked
 - Workflow: other agents implement code; assistant reviews and connects changes
 - Workflow: code changes are committed and pushed to GitHub after approval
+- Architecture & wiring: main.js is the single composition root; it wires folder index.js public APIs
+- Architecture & wiring: each folder contains context.md (intent + rules) and index.js (wiring + public exports)
+- Architecture & wiring: refactor workflow = update folder context first, then code, then update wiring in main.js
 
 ## Recent Updates
 - 2026-01-21: Set initial stack and backend direction.
@@ -65,3 +68,4 @@ Use this checklist on session start or after reload.
 - 2026-01-21: Clarified hex orientation (pointy-top tiles, flat-top board silhouette).
 - 2026-01-23: Added detailed movement rules (path, input, animation, enemy interactions, actions).
 - 2026-01-23: Clarified assistant role as coordinator/reviewer/brief-writer and codified commit/push workflow.
+- 2026-01-23: Added explicit architecture/wiring conventions (main.js composition root, folder context + index.js).

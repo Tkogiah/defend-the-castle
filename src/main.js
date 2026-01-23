@@ -1,9 +1,9 @@
 import { createInitialState } from './state.js';
-import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex.js';
-import { renderFrame } from './render.js';
-import { setupInputControls } from './input.js';
+import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
+import { renderFrame } from './render/index.js';
+import { setupInputControls } from './input/index.js';
 import { movePlayer } from './rules.js';
-import { HEX_SIZE, BOARD_RADIUS } from './config.js';
+import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');

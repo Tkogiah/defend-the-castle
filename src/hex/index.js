@@ -1,1 +1,1 @@
-export * from '../hex.js';
+export * from './hex.js';
