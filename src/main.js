@@ -1,4 +1,4 @@
-import { createInitialState } from './core/index.js';
+import { createInitialState, startPlayerTurn, endPlayerTurn, runEnemyPhase } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import { renderFrame } from './render/index.js';
 import { setupInputControls } from './input/index.js';
@@ -15,6 +15,7 @@ const view = {
 };
 
 let state = createInitialState(generateHexGrid());
+state = startPlayerTurn(state);
 
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
@@ -83,7 +84,21 @@ const cleanupInput = setupInputControls(canvas, view, {
   onMoveDirection: handleMoveDirection,
 });
 
+function handleEndTurnKey(e) {
+  if (e.key !== 'Enter') return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+    return;
+  }
+  if (state.phase !== 'playerTurn') return;
+  e.preventDefault();
+  state = endPlayerTurn(state);
+  state = runEnemyPhase(state);
+}
+
+window.addEventListener('keydown', handleEndTurnKey);
+
 window.addEventListener('beforeunload', () => {
   cleanupInput?.();
+  window.removeEventListener('keydown', handleEndTurnKey);
 });
 loop();

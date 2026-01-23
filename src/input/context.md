@@ -39,3 +39,6 @@ Input handling for camera controls (pan/zoom) and movement intents (click-to-mov
 - Camera constants (MIN_ZOOM, MAX_ZOOM, etc.) are local to camera.js for now.
 - Keyboard intents are directional; path validity is enforced elsewhere.
 - Arrow keys are mapped to WASD internally.
+
+## Future Refactor
+- Split into finer-grained modules as complexity grows; update index.js wiring accordingly.

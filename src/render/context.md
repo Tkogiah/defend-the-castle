@@ -36,3 +36,6 @@ Canvas rendering for hex grid, game entities, and UI elements.
 ## Notes
 - Pointy-top hex orientation; grid uses rainbow gradient based on spiral label.
 - Color utilities are local to grid.js (not shared outside render module).
+
+## Future Refactor
+- Split into finer-grained modules as complexity grows; update index.js wiring accordingly.

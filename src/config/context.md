@@ -20,3 +20,6 @@
 
 ## Notes
 - Update when a constant changes meaning or default value.
+
+## Future Refactor
+- Split into finer-grained modules as complexity grows; update index.js wiring accordingly.

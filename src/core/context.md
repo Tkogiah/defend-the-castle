@@ -22,3 +22,6 @@
 
 ## Notes
 - Keep MVP constraints in sync with specs.
+
+## Future Refactor
+- Split into finer-grained modules as complexity grows; update index.js wiring accordingly.

@@ -63,3 +63,6 @@ Hex grid utilities for axial coordinate system: grid generation, coordinate help
 ## Notes
 - Spiral path matches rainbow gradient fill in render module.
 - Direction constants used by both grid traversal and spiral generation.
+
+## Future Refactor
+- Split into finer-grained modules as complexity grows; update index.js wiring accordingly.

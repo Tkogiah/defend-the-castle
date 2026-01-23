@@ -4,7 +4,7 @@
  */
 
 import { drawGrid } from './grid.js';
-import { drawPlayer } from './entities.js';
+import { drawPlayer, drawEnemies } from './entities.js';
 
 /**
  * Render a single frame to the canvas.
@@ -30,6 +30,7 @@ export function renderFrame(ctx, canvas, state, view) {
 
   // Draw game elements
   drawGrid(ctx, state.hexGrid);
+  drawEnemies(ctx, state.enemies);
   drawPlayer(ctx, state.player.position);
 
   ctx.restore();

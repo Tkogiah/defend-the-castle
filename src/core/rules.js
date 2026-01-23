@@ -25,7 +25,7 @@ import {
   setPlayerPosition,
   setPlayerMovementPoints,
 } from './state.js';
-import { getSpiralLabel } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial } from '../hex/index.js';
 
 // -----------------------------
 // Deck Operations
@@ -80,7 +80,8 @@ export function startPlayerTurn(state) {
 
 export function endPlayerTurn(state) {
   let newState = discardHand(state);
-  newState = setPlayerMovementPoints(newState, 0);
+  // TESTING ONLY: keep movement points replenished for loop testing.
+  newState = setPlayerMovementPoints(newState, 100);
   newState = setPhase(newState, 'enemyTurn');
   return newState;
 }
@@ -169,6 +170,17 @@ export function movePlayer(state, targetPosition) {
     : 0;
   if (steps > movementPoints) return state;
 
+  // Block movement if any enemy occupies the path (including target).
+  const direction = targetLabel > startLabel ? 1 : -1;
+  const enemyLabels = new Set(
+    state.enemies.map((e) => getSpiralLabel(e.position.q, e.position.r))
+  );
+  for (let label = startLabel + direction; label !== targetLabel + direction; label += direction) {
+    if (enemyLabels.has(label)) {
+      return state;
+    }
+  }
+
   for (const enemy of state.enemies) {
     if (enemy.position.q === targetPosition.q && enemy.position.r === targetPosition.r) {
       return state;
@@ -241,19 +253,65 @@ export function convertCrystalsToGold(state) {
 }
 
 // -----------------------------
-// Enemy Phase (stubs)
+// Enemy Phase
 // -----------------------------
 
+/**
+ * Spawn enemies at the outer edge (spiral label 90).
+ * @param {Object} state - current game state
+ * @param {number} count - number of enemies to spawn
+ * @returns {Object} new state with spawned enemies
+ */
+export function spawnEnemies(state, count) {
+  const spawnLabel = 90; // Outer edge of spiral
+  const spawnPos = getSpiralAxial(spawnLabel);
+  if (!spawnPos) return state;
+
+  let newState = state;
+
+  for (let i = 0; i < count; i++) {
+    const enemy = {
+      id: `enemy-${Date.now()}-${i}`,
+      position: { q: spawnPos.q, r: spawnPos.r },
+      hp: 10,
+      maxHp: 10,
+      isBoss: false,
+    };
+    newState = {
+      ...newState,
+      enemies: [...newState.enemies, enemy],
+    };
+  }
+
+  // Update wave tracker
+  newState = updateWave(newState, {
+    enemiesSpawned: newState.wave.enemiesSpawned + count,
+  });
+
+  return newState;
+}
+
+/**
+ * Move all enemies along the spiral path toward center.
+ * Each enemy moves 1-10 random steps (counter-clockwise, decreasing label).
+ * @param {Object} state - current game state
+ * @returns {Object} new state with updated enemy positions
+ */
 export function moveEnemies(state) {
-  // Each enemy moves 1-10 hexes toward center
-  // Stub: actual pathfinding to be implemented
   let newState = state;
 
   for (const enemy of state.enemies) {
-    // Placeholder: movement logic will use hex.js for pathfinding
+    const currentLabel = getSpiralLabel(enemy.position.q, enemy.position.r);
+    if (currentLabel === null) continue;
+
+    // Random 1-10 steps toward center (decreasing label)
     const steps = Math.floor(Math.random() * 10) + 1;
-    void steps;
-    // setEnemyPosition would be called after computing new position
+    const newLabel = Math.max(0, currentLabel - steps);
+
+    const newPos = getSpiralAxial(newLabel);
+    if (newPos) {
+      newState = setEnemyPosition(newState, enemy.id, newPos);
+    }
   }
 
   return newState;
@@ -273,7 +331,14 @@ export function checkPlayerKnockout(state) {
 }
 
 export function runEnemyPhase(state) {
-  let newState = moveEnemies(state);
+  let newState = state;
+
+  // Spawn enemies on first enemy turn (once per game)
+  if (newState.wave.enemiesSpawned === 0) {
+    newState = spawnEnemies(newState, 10);
+  }
+
+  newState = moveEnemies(newState);
   newState = checkPlayerKnockout(newState);
   newState = endEnemyTurn(newState);
   if (newState.outcome) return newState;
