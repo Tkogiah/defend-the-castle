@@ -10,6 +10,70 @@
     <main class="app">
       <canvas id="game-canvas" width="800" height="600"></canvas>
     </main>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+      <!-- Top buttons -->
+      <button id="btn-end-turn" class="ui-btn top-left">End Turn</button>
+      <button id="btn-character" class="ui-btn top-right">Character</button>
+      <button id="btn-hand" class="ui-btn bottom-right">Hand</button>
+
+      <!-- Card detail panel (top 60%, hidden by default) -->
+      <div id="card-detail" class="card-detail hidden">
+        <div class="card-detail-zones">
+          <div class="drop-zone drop-zone-left" data-action="movement">
+            <span>Movement</span>
+          </div>
+          <div class="drop-zone drop-zone-right" data-action="attack">
+            <span>Attack</span>
+          </div>
+        </div>
+        <div class="card-detail-content">
+          <h2 id="card-detail-name">Card Name</h2>
+          <p id="card-detail-desc">Card description goes here.</p>
+        </div>
+      </div>
+
+      <!-- Bottom drawer (hand area) -->
+      <div id="hand-drawer" class="hand-drawer collapsed">
+        <div class="drawer-content">
+          <div class="drawer-left">
+            <div class="pile-count" id="discard-count">
+              <span class="pile-label">Discard</span>
+              <span class="pile-number">0</span>
+            </div>
+          </div>
+          <div class="drawer-middle" id="hand-cards">
+            <!-- Cards rendered dynamically from state.player.hand -->
+          </div>
+          <div class="drawer-right">
+            <div class="pile-count" id="deck-count">
+              <span class="pile-label">Deck</span>
+              <span class="pile-number">5</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Character sheet panel (slides from right) -->
+      <div id="ui-backdrop" class="ui-backdrop hidden"></div>
+      <div id="character-sheet" class="character-sheet hidden">
+        <div class="sheet-header">
+          <h2>Character Sheet</h2>
+          <button id="btn-close-sheet" class="ui-btn">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div class="stat-row"><span>Class:</span><span>Warrior</span></div>
+          <div class="stat-row"><span>Weapon:</span><span>Sword</span></div>
+          <div class="stat-row"><span>Damage:</span><span id="stat-damage">10</span></div>
+          <div class="stat-row"><span>Range:</span><span id="stat-range">1</span></div>
+          <div class="stat-row"><span>Movement:</span><span id="stat-movement">3</span></div>
+          <div class="stat-row"><span>Gold:</span><span id="stat-gold">0</span></div>
+          <div class="stat-row"><span>Gear:</span><span id="stat-gear">None</span></div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

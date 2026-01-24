@@ -22,6 +22,7 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
 7) Briefing templates (when writing briefs or reviews):
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/BRIEFS.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/REVIEW_BRIEF_TEMPLATE.md
+   - /Users/tkogiah/ai-workspace/defend-the-castle/tech/CHANGE_SUMMARY_TEMPLATE.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/agent-brief-state-rules.md
 
 ## Roles
@@ -41,3 +42,4 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
 
 ## Workflow Reminder
 - After any project file updates, offer to commit changes to git.
+- Brief workflow: send task brief with a proposed execution plan (3-6 bullet points), get approval, then request implementation. Do not send execution briefs.

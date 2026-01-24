@@ -86,3 +86,31 @@ export const MERCHANT_CARDS = [
 export const STARTER_DECK_COMPOSITION = [
   { cardId: ACTION_CARD.id, count: 5 },
 ];
+
+/**
+ * Create a starter deck with unique instance IDs.
+ * @returns {Array<{ id: string, type: string, name: string, description: string, value: number }>}
+ */
+export function createStarterDeck() {
+  const deck = [];
+  let instanceCounter = 0;
+
+  for (const entry of STARTER_DECK_COMPOSITION) {
+    const template =
+      entry.cardId === ACTION_CARD.id
+        ? ACTION_CARD
+        : CRYSTAL_CARDS.find((c) => c.id === entry.cardId) ||
+          MERCHANT_CARDS.find((c) => c.id === entry.cardId);
+
+    if (!template) continue;
+
+    for (let i = 0; i < entry.count; i++) {
+      deck.push({
+        ...template,
+        id: `${template.id}_${instanceCounter++}`,
+      });
+    }
+  }
+
+  return deck;
+}

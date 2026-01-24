@@ -55,6 +55,7 @@ Use this checklist on session start or after reload.
 - Knockout: player dies if an enemy enters their hex
 - View: 2D isometric (possible future map rotation)
 - Board orientation: pointy-top hexes; overall board silhouette should read as flat-top.
+- State: deck/hand/discard are stored on player (state.player.*), not top-level.
 - Workflow: assistant acts as coordinator/reviewer/brief-writer; do not implement code unless explicitly asked
 - Workflow: other agents implement code; assistant reviews and connects changes
 - Workflow: code changes are committed and pushed to GitHub after approval

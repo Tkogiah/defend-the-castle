@@ -42,9 +42,9 @@ export function shuffleArray(arr) {
 }
 
 export function drawCards(state, count = 5) {
-  let deck = [...state.deck];
-  let discard = [...state.discard];
-  let hand = [...state.hand];
+  let deck = [...state.player.deck];
+  let discard = [...state.player.discard];
+  let hand = [...state.player.hand];
 
   for (let i = 0; i < count; i++) {
     if (deck.length === 0 && discard.length === 0) break;
@@ -62,7 +62,7 @@ export function drawCards(state, count = 5) {
 }
 
 export function discardHand(state) {
-  const newDiscard = [...state.discard, ...state.hand];
+  const newDiscard = [...state.player.discard, ...state.player.hand];
   let newState = setDiscard(state, newDiscard);
   newState = setHand(newState, []);
   return newState;
@@ -146,12 +146,26 @@ export function checkLoseCondition(state) {
 export function playActionCard(state, cardId, choice) {
   // choice: 'attack' | 'movement'
   // Stub: removes card from hand, adds to discard
-  const card = state.hand.find((c) => c.id === cardId);
+  const card = state.player.hand.find((c) => c.id === cardId);
   if (!card || card.type !== 'action') return state;
+  if (choice !== 'attack' && choice !== 'movement') return state;
 
   let newState = removeCardFromHand(state, cardId);
   newState = addCardToDiscard(newState, card);
-  // Actual attack/movement logic to be implemented
+
+  const value = Number.isFinite(card.value) ? card.value : 1;
+  if (choice === 'attack') {
+    newState = setPlayerAttackPoints(
+      newState,
+      newState.player.attackPoints + value
+    );
+  } else {
+    newState = setPlayerMovementPoints(
+      newState,
+      newState.player.movementPoints + value
+    );
+  }
+
   return newState;
 }
 
@@ -280,7 +294,7 @@ export function convertCrystalsToGold(state) {
   let goldGained = 0;
   const nonCrystalCards = [];
 
-  for (const card of state.hand) {
+  for (const card of state.player.hand) {
     if (card.type === 'crystal') {
       goldGained += card.value;
     } else {

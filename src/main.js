@@ -1,7 +1,16 @@
-import { createInitialState, startPlayerTurn, endPlayerTurn, runEnemyPhase, movePlayer, tryAttackAtHex } from './core/index.js';
+import {
+  createInitialState,
+  startPlayerTurn,
+  endPlayerTurn,
+  runEnemyPhase,
+  movePlayer,
+  tryAttackAtHex,
+  playActionCard,
+} from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import { renderFrame } from './render/index.js';
 import { setupInputControls } from './input/index.js';
+import { subscribeToState } from './ui.js';
 import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -15,6 +24,12 @@ const view = {
 
 let state = createInitialState(generateHexGrid());
 state = startPlayerTurn(state);
+subscribeToState(() => state);
+emitStateChanged();
+
+function emitStateChanged() {
+  window.dispatchEvent(new CustomEvent('state-changed'));
+}
 
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
@@ -38,11 +53,13 @@ function handleMoveToHex(target) {
   );
   if (hasEnemy) {
     state = tryAttackAtHex(state, target);
+    emitStateChanged();
     return;
   }
 
   // Otherwise, move
   state = movePlayer(state, target);
+  emitStateChanged();
 }
 
 function getDirectionFromDelta(dq, dr) {
@@ -81,8 +98,10 @@ function handleMoveDirection(direction) {
 
   if (wantsForward) {
     state = movePlayer(state, forwardPos);
+    emitStateChanged();
   } else if (wantsBackward) {
     state = movePlayer(state, backwardPos);
+    emitStateChanged();
   }
 }
 
@@ -104,9 +123,24 @@ function handleEndTurnKey(e) {
   e.preventDefault();
   state = endPlayerTurn(state);
   state = runEnemyPhase(state);
+  emitStateChanged();
 }
 
 window.addEventListener('keydown', handleEndTurnKey);
+
+window.addEventListener('card-played', (e) => {
+  const { cardId, action } = e.detail || {};
+  if (!cardId || !action) return;
+  state = playActionCard(state, cardId, action);
+  emitStateChanged();
+});
+
+window.addEventListener('end-turn', () => {
+  if (state.phase !== 'playerTurn') return;
+  state = endPlayerTurn(state);
+  state = runEnemyPhase(state);
+  emitStateChanged();
+});
 
 window.addEventListener('beforeunload', () => {
   cleanupInput?.();

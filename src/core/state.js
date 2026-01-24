@@ -9,6 +9,8 @@
  * Occupancy is tracked via player.position and enemies[].position, not stored in hex data.
  */
 
+import { createStarterDeck } from '../data/cards.js';
+
 // -----------------------------
 // Initial State Shape (MVP)
 // -----------------------------
@@ -41,12 +43,12 @@ export function createInitialState(hexGrid = new Map()) {
       gold: 0,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
-    },
 
-    // Deck system (cards: { id, type, value })
-    deck: [],
-    hand: [],
-    discard: [],
+      // Deck system (cards: { id, type, value })
+      deck: createStarterDeck(),
+      hand: [],
+      discard: [],
+    },
 
     // Enemies: { id, position: {q,r}, hp, maxHp, isBoss }
     enemies: [],
@@ -130,27 +132,33 @@ export function setPlayerKnockedOut(state, isKnockedOut) {
 // Deck
 
 export function setDeck(state, deck) {
-  return { ...state, deck: [...deck] };
+  return { ...state, player: { ...state.player, deck: [...deck] } };
 }
 
 export function setHand(state, hand) {
-  return { ...state, hand: [...hand] };
+  return { ...state, player: { ...state.player, hand: [...hand] } };
 }
 
 export function setDiscard(state, discard) {
-  return { ...state, discard: [...discard] };
+  return { ...state, player: { ...state.player, discard: [...discard] } };
 }
 
 export function addCardToHand(state, card) {
-  return { ...state, hand: [...state.hand, card] };
+  return { ...state, player: { ...state.player, hand: [...state.player.hand, card] } };
 }
 
 export function removeCardFromHand(state, cardId) {
-  return { ...state, hand: state.hand.filter((c) => c.id !== cardId) };
+  return {
+    ...state,
+    player: { ...state.player, hand: state.player.hand.filter((c) => c.id !== cardId) },
+  };
 }
 
 export function addCardToDiscard(state, card) {
-  return { ...state, discard: [...state.discard, card] };
+  return {
+    ...state,
+    player: { ...state.player, discard: [...state.player.discard, card] },
+  };
 }
 
 // Enemies
