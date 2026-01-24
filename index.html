@@ -60,16 +60,26 @@
       <div id="character-sheet" class="character-sheet hidden">
         <div class="sheet-header">
           <h2>Character Sheet</h2>
-          <button id="btn-close-sheet" class="ui-btn">✕</button>
+          <button id="btn-close-sheet" class="ui-btn sheet-close">✕</button>
         </div>
         <div class="sheet-content">
-          <div class="stat-row"><span>Class:</span><span>Warrior</span></div>
-          <div class="stat-row"><span>Weapon:</span><span>Sword</span></div>
-          <div class="stat-row"><span>Damage:</span><span id="stat-damage">10</span></div>
-          <div class="stat-row"><span>Range:</span><span id="stat-range">1</span></div>
-          <div class="stat-row"><span>Movement:</span><span id="stat-movement">3</span></div>
-          <div class="stat-row"><span>Gold:</span><span id="stat-gold">0</span></div>
-          <div class="stat-row"><span>Gear:</span><span id="stat-gear">None</span></div>
+          <div class="sheet-section">
+            <h3 class="sheet-title">Character</h3>
+            <div class="stat-row"><span>Class:</span><span>Warrior</span></div>
+            <div class="stat-row"><span>Weapon:</span><span>Sword</span></div>
+            <div class="stat-row"><span>Damage:</span><span id="stat-damage">10</span></div>
+            <div class="stat-row"><span>Range:</span><span id="stat-range">1</span></div>
+            <div class="stat-row"><span>Speed:</span><span id="stat-movement">3</span></div>
+            <div class="stat-row"><span>Gold:</span><span id="stat-gold">0</span></div>
+          </div>
+          <div class="sheet-section">
+            <h3 class="sheet-title">Gear</h3>
+            <div class="stat-row"><span>Head</span><span class="slot-empty">Empty</span></div>
+            <div class="stat-row"><span>Body</span><span class="slot-empty">Empty</span></div>
+            <div class="stat-row"><span>Hand</span><span class="slot-empty">Empty</span></div>
+            <div class="stat-row"><span>Foot</span><span class="slot-empty">Empty</span></div>
+            <div class="stat-row"><span>Mount</span><span class="slot-empty">Empty</span></div>
+          </div>
         </div>
       </div>
     </div>

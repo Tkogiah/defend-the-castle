@@ -36,7 +36,28 @@ let dragOffsetY = 0;
 // Drawer Toggle
 // -----------------------------
 
+function closeHandDrawer() {
+  drawer.classList.add('collapsed');
+}
+
+function openHandDrawer() {
+  drawer.classList.remove('collapsed');
+}
+
+function closeCharacterSheet() {
+  uiBackdrop?.classList.add('hidden');
+  characterSheet.classList.add('hidden');
+  document.body.classList.remove('sheet-open');
+}
+
+function openCharacterSheet() {
+  uiBackdrop?.classList.remove('hidden');
+  characterSheet.classList.remove('hidden');
+  document.body.classList.add('sheet-open');
+}
+
 btnHand?.addEventListener('click', () => {
+  closeCharacterSheet();
   drawer.classList.toggle('collapsed');
 });
 
@@ -101,6 +122,7 @@ function startDrag(e) {
   e.preventDefault();
   draggedCard = slot;
   slot.classList.add('dragging');
+  cardDetail.classList.remove('hidden');
 
   const touch = e.touches ? e.touches[0] : e;
   const rect = slot.getBoundingClientRect();
@@ -149,6 +171,11 @@ function onDrag(e) {
       touch.clientY <= rect.bottom;
     zone.classList.toggle('drag-over', inZone);
   });
+
+  const overMove = dropZones[0]?.classList.contains('drag-over');
+  const overAttack = dropZones[1]?.classList.contains('drag-over');
+  cardDetail.classList.toggle('drag-movement', !!overMove);
+  cardDetail.classList.toggle('drag-attack', !!overAttack);
 }
 
 function endDrag(e) {
@@ -219,6 +246,9 @@ function endDrag(e) {
     selectedCard.classList.remove('selected');
     selectedCard = null;
   }
+
+  cardDetail.classList.remove('drag-movement', 'drag-attack');
+  cardDetail.classList.add('hidden');
 }
 
 // -----------------------------
@@ -226,26 +256,23 @@ function endDrag(e) {
 // -----------------------------
 
 btnCharacter.addEventListener('click', () => {
-  uiBackdrop?.classList.remove('hidden');
-  characterSheet.classList.remove('hidden');
+  closeHandDrawer();
+  openCharacterSheet();
 });
 
 btnCloseSheet.addEventListener('click', () => {
-  uiBackdrop?.classList.add('hidden');
-  characterSheet.classList.add('hidden');
+  closeCharacterSheet();
 });
 
 // Close sheet when clicking backdrop
 characterSheet.addEventListener('click', (e) => {
   if (e.target === characterSheet) {
-    uiBackdrop?.classList.add('hidden');
-    characterSheet.classList.add('hidden');
+    closeCharacterSheet();
   }
 });
 
 uiBackdrop?.addEventListener('click', () => {
-  uiBackdrop.classList.add('hidden');
-  characterSheet.classList.add('hidden');
+  closeCharacterSheet();
 });
 
 // -----------------------------

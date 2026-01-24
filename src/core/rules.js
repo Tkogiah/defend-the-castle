@@ -75,15 +75,14 @@ export function discardHand(state) {
 export function startPlayerTurn(state) {
   let newState = incrementTurn(state);
   newState = setPhase(newState, 'playerTurn');
-  newState = setPlayerAttackPoints(newState, 10);
+  newState = setPlayerAttackPoints(newState, 0);
+  newState = setPlayerMovementPoints(newState, 0);
   newState = drawCards(newState, 5);
   return newState;
 }
 
 export function endPlayerTurn(state) {
   let newState = discardHand(state);
-  // TESTING ONLY: keep movement points replenished for loop testing.
-  newState = setPlayerMovementPoints(newState, 10);
   newState = setPhase(newState, 'enemyTurn');
   return newState;
 }
@@ -160,9 +159,12 @@ export function playActionCard(state, cardId, choice) {
       newState.player.attackPoints + value
     );
   } else {
+    const speed = Number.isFinite(newState.player.baseMovement)
+      ? newState.player.baseMovement
+      : 0;
     newState = setPlayerMovementPoints(
       newState,
-      newState.player.movementPoints + value
+      newState.player.movementPoints + value * speed
     );
   }
 

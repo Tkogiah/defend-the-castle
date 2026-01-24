@@ -36,10 +36,10 @@ export function createInitialState(hexGrid = new Map()) {
     player: {
       position: { q: 0, r: 0 }, // axial coords, starts at center
       baseMovement: 3,
-      movementPoints: 10, // TESTING: calibrated for visual testing
+      movementPoints: 0, 
       baseDamage: 10,
       range: 2,
-      attackPoints: 10,
+      attackPoints: 0,
       gold: 0,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
