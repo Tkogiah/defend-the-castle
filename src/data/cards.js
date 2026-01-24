@@ -91,6 +91,22 @@ export const STARTER_DECK_COMPOSITION = [
  * Create a starter deck with unique instance IDs.
  * @returns {Array<{ id: string, type: string, name: string, description: string, value: number }>}
  */
+let crystalInstanceCounter = 0;
+
+/**
+ * Create a crystal card instance based on ring distance.
+ * @param {number} ring - Ring number (1-5); ring 0 returns null
+ * @returns {Object|null} Crystal card with unique ID, or null if ring <= 0
+ */
+export function createCrystalCard(ring) {
+  if (ring <= 0 || ring > 5) return null;
+  const template = CRYSTAL_CARDS[ring - 1];
+  return {
+    ...template,
+    id: `${template.id}_${crystalInstanceCounter++}`,
+  };
+}
+
 export function createStarterDeck() {
   const deck = [];
   let instanceCounter = 0;

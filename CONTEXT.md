@@ -50,6 +50,7 @@ Use this checklist on session start or after reload.
 - Movement feel: player can move within a hex; crossing a hex edge requires a small intentional delay to avoid accidental transitions (after isometric visuals)
 - Waves: 10 waves × 10 enemies, boss at end of each wave
 - Economy: crystals dropped by enemies; spent at center on cards
+- Economy: on attack, add crystal card to discard equal to the player's ring value (ring is distance from center)
 - Gear: boss loot grants non-deck abilities; tradable on same hex
 - Win/Lose: win by defeating final boss; lose if any enemy reaches center
 - Knockout: player dies if an enemy enters their hex
@@ -63,6 +64,7 @@ Use this checklist on session start or after reload.
 - Architecture & wiring: main.js is the single composition root; it wires folder index.js public APIs
 - Architecture & wiring: each folder contains context.md (intent + rules) and index.js (wiring + public exports)
 - Architecture & wiring: refactor workflow = update folder context first, then code, then update wiring in main.js
+- Cards: draw uses discard reshuffle whenever the deck is empty (including mid-draw from effects)
 
 ## Recent Updates
 - 2026-01-21: Set initial stack and backend direction.

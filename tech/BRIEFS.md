@@ -45,3 +45,10 @@ Track agent briefs, dates, and outcomes so context can be restored quickly and d
 - Agent(s): Claude, Gemini
 - Outcome: Claude's approach adopted (pinch + cursor-centered zoom + pan).
 - Follow-ups: Keep pan in screen-space for MVP (no divide by zoom); revisit if camera becomes world-space post-MVP.
+
+## 2026-01-24 — Attack Crystal Rewards + Draw Rules (Proposal)
+- Goal: Propose attack-triggered crystal rewards based on enemy ring distance and robust draw rules (reshuffle discard mid-draw).
+- Files: src/core/rules.js, src/data/cards.js, src/core/state.js
+- Agent(s): Claude
+- Outcome:
+- Follow-ups:

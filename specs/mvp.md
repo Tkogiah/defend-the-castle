@@ -42,14 +42,14 @@
 - Future: randomize available merchant cards at game start
 
 ## Economy (MVP)
-- Crystal rewards are based on distance from center hex at time of attack
+- Crystal rewards are based on the player's distance from the center at time of attack
 - Ring 0 (center): reward 0
 - Ring 1: reward 1-value crystal card
 - Ring 2: reward 2-value crystal card
 - Ring 3: reward 3-value crystal card
 - Ring 4: reward 4-value crystal card
 - Ring 5: reward 5-value crystal card
-- Crystal cards go to discard pile on attack
+- Crystal cards go to discard pile on attack (even if enemy survives)
 - Crystals are converted to gold only at the center on the player’s turn
 - Design note: rewards simulate encumbrance
 

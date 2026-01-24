@@ -27,6 +27,7 @@ import {
   setPlayerAttackPoints,
 } from './state.js';
 import { getSpiralLabel, getSpiralAxial, axialDistance } from '../hex/index.js';
+import { createCrystalCard } from '../data/cards.js';
 
 // -----------------------------
 // Deck Operations
@@ -217,18 +218,19 @@ export function attackEnemy(state, enemyId) {
   const damage = state.player.baseDamage;
   let newState = damageEnemy(state, enemyId, damage);
 
+  // Award crystal card on attack based on player's ring distance from center
+  const { q, r } = state.player.position;
+  const ring = getHexRing(state, q, r);
+  const crystalCard = createCrystalCard(ring);
+  if (crystalCard) {
+    newState = addCardToDiscard(newState, crystalCard);
+  }
+
   // Check if enemy defeated
   const updatedEnemy = newState.enemies.find((e) => e.id === enemyId);
   if (updatedEnemy && updatedEnemy.hp <= 0) {
     newState = removeEnemy(newState, enemyId);
     newState = incrementEnemiesDefeated(newState);
-
-    // Award crystal card based on ring distance
-    const ring = getHexRing(state, enemy.position.q, enemy.position.r);
-    if (ring > 0) {
-      // Crystal card reward would be added to discard
-      // Card creation deferred to data module
-    }
 
     // Check if boss was defeated
     if (enemy.isBoss) {
