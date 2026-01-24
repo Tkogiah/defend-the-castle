@@ -41,7 +41,7 @@ export function renderFrame(ctx, canvas, state, view) {
   drawMovementRange(ctx, movementRange);
 
   // Attack range overlay (green outlines)
-  drawAttackRange(ctx, state.player.position);
+  drawAttackRange(ctx, state.hexGrid, state.player.position, state.player.range);
 
   // Entities
   drawEnemies(ctx, state.enemies);

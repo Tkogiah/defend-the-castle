@@ -29,7 +29,8 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
 - Codex (coordinator): brief writer/reviewer; manages main.js composition root;
   no code changes unless explicitly asked.
 - Claude (implementation agent): manages module index.js wiring and implements
-  scoped tasks from briefs; reports summary/files/open questions.
+  scoped tasks from briefs; reports summary/files/open questions. Do not edit
+  main.js unless explicitly approved in the brief.
 
 ## Guardrails
 - MVP-first. No architecture changes unless approved.

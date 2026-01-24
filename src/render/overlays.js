@@ -4,7 +4,7 @@
  */
 
 import { HEX_SIZE } from '../config/index.js';
-import { getSpiralLabel, getSpiralAxial, getNeighbors } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial, getHexesInRange } from '../hex/index.js';
 import { axialToPixel } from './util.js';
 
 /**
@@ -71,18 +71,22 @@ export function drawMovementRange(ctx, positions) {
 }
 
 /**
- * Draw attack range overlay (green outline on adjacent hexes).
+ * Draw attack range overlay (green outline on hexes within player's range).
  * @param {CanvasRenderingContext2D} ctx
+ * @param {Map} hexGrid - the hex grid
  * @param {{ q: number, r: number }} playerPos - player's current position
+ * @param {number} range - player's attack range
  */
-export function drawAttackRange(ctx, playerPos) {
-  const neighbors = getNeighbors(playerPos.q, playerPos.r);
+export function drawAttackRange(ctx, hexGrid, playerPos, range) {
+  const hexesInRange = getHexesInRange(hexGrid, playerPos.q, playerPos.r, range);
 
   ctx.strokeStyle = 'rgba(50, 205, 50, 0.7)'; // Lime green
   ctx.lineWidth = 2;
 
-  for (const pos of neighbors) {
-    const { x, y } = axialToPixel(pos.q, pos.r, HEX_SIZE);
+  for (const hex of hexesInRange) {
+    // Skip the player's own hex
+    if (hex.q === playerPos.q && hex.r === playerPos.r) continue;
+    const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
     drawHexOutline(ctx, x, y, HEX_SIZE);
   }
 }

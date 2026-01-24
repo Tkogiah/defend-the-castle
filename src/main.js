@@ -1,8 +1,7 @@
-import { createInitialState, startPlayerTurn, endPlayerTurn, runEnemyPhase } from './core/index.js';
+import { createInitialState, startPlayerTurn, endPlayerTurn, runEnemyPhase, movePlayer, tryAttackAtHex } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import { renderFrame } from './render/index.js';
 import { setupInputControls } from './input/index.js';
-import { movePlayer } from './core/index.js';
 import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -31,6 +30,18 @@ function loop() {
 }
 
 function handleMoveToHex(target) {
+  const { q: pq, r: pr } = state.player.position;
+  const { q: tq, r: tr } = target;
+
+  const hasEnemy = state.enemies.some(
+    (e) => e.position.q === tq && e.position.r === tr
+  );
+  if (hasEnemy) {
+    state = tryAttackAtHex(state, target);
+    return;
+  }
+
+  // Otherwise, move
   state = movePlayer(state, target);
 }
 

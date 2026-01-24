@@ -36,7 +36,8 @@ export function createInitialState(hexGrid = new Map()) {
       baseMovement: 3,
       movementPoints: 10, // TESTING: calibrated for visual testing
       baseDamage: 10,
-      range: 1,
+      range: 2,
+      attackPoints: 10,
       gold: 0,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
@@ -104,6 +105,10 @@ export function setPlayerPosition(state, position) {
 
 export function setPlayerMovementPoints(state, movementPoints) {
   return { ...state, player: { ...state.player, movementPoints } };
+}
+
+export function setPlayerAttackPoints(state, attackPoints) {
+  return { ...state, player: { ...state.player, attackPoints } };
 }
 
 export function setPlayerGold(state, gold) {

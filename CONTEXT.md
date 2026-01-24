@@ -58,6 +58,7 @@ Use this checklist on session start or after reload.
 - Workflow: assistant acts as coordinator/reviewer/brief-writer; do not implement code unless explicitly asked
 - Workflow: other agents implement code; assistant reviews and connects changes
 - Workflow: code changes are committed and pushed to GitHub after approval
+- Workflow: main.js is Codex-owned; other agents do not edit main.js unless the brief explicitly allows it
 - Architecture & wiring: main.js is the single composition root; it wires folder index.js public APIs
 - Architecture & wiring: each folder contains context.md (intent + rules) and index.js (wiring + public exports)
 - Architecture & wiring: refactor workflow = update folder context first, then code, then update wiring in main.js

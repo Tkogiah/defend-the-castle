@@ -24,8 +24,9 @@ import {
   setEnemyPosition,
   setPlayerPosition,
   setPlayerMovementPoints,
+  setPlayerAttackPoints,
 } from './state.js';
-import { getSpiralLabel, getSpiralAxial } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial, axialDistance } from '../hex/index.js';
 
 // -----------------------------
 // Deck Operations
@@ -74,6 +75,7 @@ export function discardHand(state) {
 export function startPlayerTurn(state) {
   let newState = incrementTurn(state);
   newState = setPhase(newState, 'playerTurn');
+  newState = setPlayerAttackPoints(newState, 10);
   newState = drawCards(newState, 5);
   return newState;
 }
@@ -217,6 +219,46 @@ export function attackEnemy(state, enemyId) {
       newState = updateWave(newState, { bossDefeated: true });
     }
   }
+
+  return newState;
+}
+
+/**
+ * Attempt to attack an enemy at the target hex.
+ * Requires: target is within player.range, player has attack points, enemy exists at target.
+ * Consumes 1 attack point and damages the first enemy at the target.
+ * @param {Object} state - current game state
+ * @param {{ q: number, r: number }} targetPos - target hex position
+ * @returns {Object} new state (unchanged if attack fails)
+ */
+export function tryAttackAtHex(state, targetPos) {
+  const { q: pq, r: pr } = state.player.position;
+  const { q: tq, r: tr } = targetPos;
+
+  // Must be within player's range
+  const distance = axialDistance(pq, pr, tq, tr);
+  if (distance > state.player.range || distance === 0) {
+    return state;
+  }
+
+  // Must have attack points
+  if (state.player.attackPoints <= 0) {
+    return state;
+  }
+
+  // Find first enemy at target hex
+  const enemyAtTarget = state.enemies.find(
+    (e) => e.position.q === tq && e.position.r === tr
+  );
+  if (!enemyAtTarget) {
+    return state;
+  }
+
+  // Consume 1 attack point
+  let newState = setPlayerAttackPoints(state, state.player.attackPoints - 1);
+
+  // Attack the enemy
+  newState = attackEnemy(newState, enemyAtTarget.id);
 
   return newState;
 }
