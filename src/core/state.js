@@ -9,7 +9,12 @@
  * Occupancy is tracked via player.position and enemies[].position, not stored in hex data.
  */
 
-import { createStarterDeck } from '../data/cards.js';
+import {
+  createStarterDeck,
+  createCrystalCard,
+  MERCHANT_CARDS,
+  SHOP_PILE_SIZE,
+} from '../data/cards.js';
 
 // -----------------------------
 // Initial State Shape (MVP)
@@ -40,13 +45,13 @@ export function createInitialState(hexGrid = new Map()) {
       baseDamage: 10,
       range: 2,
       attackPoints: 0,
-      gold: 0,
+      gold: 1000,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
 
       // Deck system (cards: { id, type, value })
       deck: createStarterDeck(),
-      hand: [],
+      hand: [createCrystalCard(1)].filter(Boolean),
       discard: [],
     },
 
@@ -58,7 +63,12 @@ export function createInitialState(hexGrid = new Map()) {
 
     // Shop: MVP = 8 merchant cards, 10 copies each
     shop: {
-      piles: [], // { cardType, remaining }
+      piles: MERCHANT_CARDS.map((card) => ({
+        cardType: card.id,
+        name: card.name,
+        cost: card.cost,
+        remaining: SHOP_PILE_SIZE,
+      })),
     },
 
     // Outcome

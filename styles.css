@@ -62,6 +62,22 @@ body {
   display: none;
 }
 
+.merchant-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 65vh;
+  bottom: auto;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 120;
+  pointer-events: auto;
+}
+
+.merchant-backdrop.hidden {
+  display: none;
+}
+
 /* Top buttons */
 .ui-btn {
   background: var(--panel);
@@ -102,11 +118,40 @@ body {
   position: fixed;
   bottom: 12px;
   right: 12px;
+  z-index: 201;
+}
+
+.bottom-left {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 129;
+}
+
+.ui-btn.hidden {
+  display: none;
+}
+
+.ui-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .sheet-open #btn-character,
 .sheet-open #btn-hand,
 .sheet-open #btn-end-turn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.merchant-open #btn-end-turn,
+.merchant-open #btn-character,
+.merchant-open #btn-merchant {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.merchant-open #btn-hand {
   opacity: 0;
   pointer-events: none;
 }
@@ -229,15 +274,21 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40%;
+  height: 35%;
   background: linear-gradient(to top, var(--panel) 0%, rgba(18, 26, 23, 0.95) 100%);
   border-top: 2px solid var(--grid);
   transition: transform 0.3s ease-out;
   pointer-events: auto;
+  z-index: 130;
 }
 
 .hand-drawer.collapsed {
   transform: translateY(100%);
+}
+
+.hand-drawer.drop-target {
+  border-top: 3px solid #4a9;
+  box-shadow: 0 -4px 16px rgba(68, 170, 136, 0.4);
 }
 
 .drawer-content {
@@ -487,6 +538,193 @@ body {
 
   .sheet-content {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ================================
+   Merchant Panel
+   ================================ */
+
+.merchant-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 90vw;
+  height: 65vh;
+  max-height: 65vh;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 228, 0.98) 0%, rgba(236, 218, 176, 0.98) 100%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(120, 92, 48, 0.08) 0px,
+      rgba(120, 92, 48, 0.08) 1px,
+      rgba(255, 255, 255, 0) 2px,
+      rgba(255, 255, 255, 0) 6px
+    );
+  border: 2px solid rgba(110, 88, 48, 0.6);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  transform: translateX(0);
+  transition: transform 0.3s ease-out, opacity 0.3s;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.merchant-panel.hidden {
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.merchant-content {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 0.75rem;
+}
+
+.merchant-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.merchant-right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.merchant-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 70px);
+  grid-auto-rows: 100px;
+  gap: 0.5rem;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.merchant-buy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.1rem 0.5rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(110, 88, 48, 0.35);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6a542a;
+}
+
+.merchant-slot {
+  min-width: 70px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(236, 218, 176, 0.7) 100%);
+  border: 2px solid rgba(110, 88, 48, 0.4);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.merchant-slot-title {
+  font-weight: 700;
+  color: #4c3a1c;
+}
+
+.merchant-slot-cost {
+  color: #7a5a2a;
+  font-size: 0.75rem;
+}
+
+.merchant-slot-count {
+  color: #5a4a2a;
+  font-size: 0.65rem;
+  text-align: right;
+}
+
+.merchant-slot.sold-out {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.merchant-slot.dragging {
+  opacity: 0.3;
+}
+
+.merchant-portrait {
+  height: 48px;
+  border: 1px dashed rgba(110, 88, 48, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #6a542a;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.merchant-drop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 65%;
+  border: 2px dashed rgba(110, 88, 48, 0.5);
+  border-radius: 10px;
+  padding: 0.75rem;
+  color: #5a4522;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 2;
+  opacity: 0.2;
+}
+
+.merchant-drop.drag-active {
+  opacity: 1;
+  box-shadow: 0 0 18px rgba(217, 184, 108, 0.6);
+}
+
+.merchant-drop.drag-over {
+  border-color: #4aa36b;
+  background: rgba(74, 163, 107, 0.12);
+}
+
+.merchant-drop.drag-over::after {
+  content: "SELL";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #b88b2a;
+  text-shadow: 0 0 12px rgba(217, 184, 108, 0.8);
+}
+
+.merchant-sell {
+  font-size: 0.7rem;
+  color: #6a542a;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+@media (max-width: 700px) {
+  .merchant-panel {
+    width: 90vw;
+    left: 0;
+    height: 65vh;
+    top: 0;
   }
 }
 

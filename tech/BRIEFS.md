@@ -52,3 +52,17 @@ Track agent briefs, dates, and outcomes so context can be restored quickly and d
 - Agent(s): Claude
 - Outcome:
 - Follow-ups:
+
+## 2026-01-24 — Merchant UI (Proposal)
+- Goal: Propose merchant UI for ring 0 (drag crystal cards to trade for gold; 10 placeholder slots; blocks input; end turn disabled while open).
+- Files: index.html, styles.css, src/ui.js, src/ui/hand.js, src/core/state.js, src/core/rules.js, src/data/cards.js
+- Agent(s): Claude
+- Outcome:
+- Follow-ups:
+
+## 2026-01-24 — Merchant Buy Drag-to-Hand (Proposal)
+- Goal: Propose drag merchant cards into hand drawer; on drop, spend gold, add card to discard, decrement stack.
+- Files: index.html, styles.css, src/ui.js, src/ui/hand.js, src/core/state.js, src/data/cards.js, src/main.js
+- Agent(s): Claude
+- Outcome:
+- Follow-ups:

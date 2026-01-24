@@ -24,6 +24,8 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/REVIEW_BRIEF_TEMPLATE.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/CHANGE_SUMMARY_TEMPLATE.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/agent-brief-state-rules.md
+8) Global context brief (read once per session):
+   - /Users/tkogiah/ai-workspace/defend-the-castle/tech/GLOBAL_CONTEXT_BRIEF.md
 
 ## Roles
 - You (project owner): holds full scope/vision and directs priorities.

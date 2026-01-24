@@ -16,6 +16,7 @@ import {
   setOutcome,
   setPlayerKnockedOut,
   getHexRing,
+  setPlayerGold,
   addPlayerGold,
   damageEnemy,
   removeEnemy,
@@ -25,9 +26,10 @@ import {
   setPlayerPosition,
   setPlayerMovementPoints,
   setPlayerAttackPoints,
+  decrementShopPile,
 } from './state.js';
 import { getSpiralLabel, getSpiralAxial, axialDistance } from '../hex/index.js';
-import { createCrystalCard } from '../data/cards.js';
+import { createCrystalCard, createMerchantCard } from '../data/cards.js';
 
 // -----------------------------
 // Deck Operations
@@ -309,6 +311,25 @@ export function convertCrystalsToGold(state) {
   let newState = addPlayerGold(state, goldGained);
   newState = setHand(newState, nonCrystalCards);
   // Crystal cards are removed from game when converted
+  return newState;
+}
+
+/**
+ * Buy a merchant card: subtract gold, add card to discard, decrement pile.
+ * @param {Object} state - current game state
+ * @param {string} cardType - merchant card type ID (e.g., 'swift_strike')
+ * @returns {Object} new state (unchanged if purchase fails)
+ */
+export function buyMerchantCard(state, cardType) {
+  const pile = state.shop.piles.find((p) => p.cardType === cardType);
+  if (!pile || pile.remaining <= 0) return state;
+  if (state.player.gold < pile.cost) return state;
+
+  let newState = setPlayerGold(state, state.player.gold - pile.cost);
+  const card = createMerchantCard(cardType);
+  if (!card) return state;
+  newState = addCardToDiscard(newState, card);
+  newState = decrementShopPile(newState, cardType);
   return newState;
 }
 

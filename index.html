@@ -17,6 +17,7 @@
       <button id="btn-end-turn" class="ui-btn top-left">End Turn</button>
       <button id="btn-character" class="ui-btn top-right">Character</button>
       <button id="btn-hand" class="ui-btn bottom-right">Hand</button>
+      <button id="btn-merchant" class="ui-btn bottom-left hidden">Merchant</button>
 
       <!-- Card detail panel (top 60%, hidden by default) -->
       <div id="card-detail" class="card-detail hidden">
@@ -57,6 +58,7 @@
 
       <!-- Character sheet panel (slides from right) -->
       <div id="ui-backdrop" class="ui-backdrop hidden"></div>
+      <div id="merchant-backdrop" class="merchant-backdrop hidden"></div>
       <div id="character-sheet" class="character-sheet hidden">
         <div class="sheet-header">
           <h2>Character Sheet</h2>
@@ -79,6 +81,23 @@
             <div class="stat-row"><span>Hand</span><span class="slot-empty">Empty</span></div>
             <div class="stat-row"><span>Foot</span><span class="slot-empty">Empty</span></div>
             <div class="stat-row"><span>Mount</span><span class="slot-empty">Empty</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Merchant panel (slides from left) -->
+      <div id="merchant-panel" class="merchant-panel hidden">
+        <div class="sheet-content merchant-content">
+          <div class="sheet-section merchant-left">
+            <div style="display: flex; justify-content: space-between;">
+              <h3 class="sheet-title">Player Gold:  </h3><h3 id="merchant-gold-value" class="sheet-title"></h3>
+            </div>
+            <div class="merchant-portrait">Merchant</div>
+          </div>
+          <div class="sheet-section merchant-right">
+            <div class="merchant-grid" id="merchant-grid">
+              <!-- Slots rendered by UI -->
+            </div>
           </div>
         </div>
       </div>

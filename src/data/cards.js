@@ -87,11 +87,15 @@ export const STARTER_DECK_COMPOSITION = [
   { cardId: ACTION_CARD.id, count: 5 },
 ];
 
+// Shop pile configuration: 10 copies of each merchant card
+export const SHOP_PILE_SIZE = 10;
+
 /**
  * Create a starter deck with unique instance IDs.
  * @returns {Array<{ id: string, type: string, name: string, description: string, value: number }>}
  */
 let crystalInstanceCounter = 0;
+let merchantInstanceCounter = 0;
 
 /**
  * Create a crystal card instance based on ring distance.
@@ -104,6 +108,20 @@ export function createCrystalCard(ring) {
   return {
     ...template,
     id: `${template.id}_${crystalInstanceCounter++}`,
+  };
+}
+
+/**
+ * Create a merchant card instance from card type ID.
+ * @param {string} cardType - The merchant card ID (e.g., 'swift_strike')
+ * @returns {Object|null} Merchant card with unique ID, or null if not found
+ */
+export function createMerchantCard(cardType) {
+  const template = MERCHANT_CARDS.find((c) => c.id === cardType);
+  if (!template) return null;
+  return {
+    ...template,
+    id: `${template.id}_${merchantInstanceCounter++}`,
   };
 }
 

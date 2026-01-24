@@ -27,6 +27,9 @@ export function createCardElement(card) {
   el.dataset.cardType = card.type;
   el.dataset.cardName = card.name;
   el.dataset.cardDesc = card.description || '';
+  if (typeof card.value !== 'undefined') {
+    el.dataset.cardValue = card.value;
+  }
 
   // Card label
   const label = document.createElement('span');
@@ -101,5 +104,6 @@ export function getCardData(el) {
     type: el.dataset.cardType,
     name: el.dataset.cardName,
     description: el.dataset.cardDesc,
+    value: el.dataset.cardValue ? Number(el.dataset.cardValue) : undefined,
   };
 }

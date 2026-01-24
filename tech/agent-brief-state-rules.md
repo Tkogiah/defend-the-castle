@@ -18,10 +18,12 @@ Define the MVP game state model and a minimal rules skeleton that supports the t
 - Pure logic only (no canvas, DOM, or input handling).
 
 ## Inputs / Context
-- Project context: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
-- MVP spec: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
-- High-level framing: /Users/tkogiah/ai-workspace/defend-the-castle/README.md
-- Planned module layout: /Users/tkogiah/ai-workspace/defend-the-castle/src/README.md
+- Global context (read once per session): /Users/tkogiah/ai-workspace/defend-the-castle/tech/GLOBAL_CONTEXT_BRIEF.md
+- Task-specific context (only if needed beyond global):
+  - Project context: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
+  - MVP spec: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
+  - High-level framing: /Users/tkogiah/ai-workspace/defend-the-castle/README.md
+  - Planned module layout: /Users/tkogiah/ai-workspace/defend-the-castle/src/README.md
 
 ## Files/Areas Allowed
 - /Users/tkogiah/ai-workspace/defend-the-castle/src/state.js

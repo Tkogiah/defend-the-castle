@@ -6,11 +6,19 @@ import {
   movePlayer,
   tryAttackAtHex,
   playActionCard,
+  removeCardFromHand,
+  addPlayerGold,
+  getHexRing,
+  buyMerchantCard,
 } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import { renderFrame } from './render/index.js';
 import { setupInputControls } from './input/index.js';
-import { subscribeToState } from './ui.js';
+import {
+  subscribeToState,
+  updateMerchantVisibility,
+  closeMerchant,
+} from './ui.js';
 import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -28,7 +36,14 @@ subscribeToState(() => state);
 emitStateChanged();
 
 function emitStateChanged() {
-  window.dispatchEvent(new CustomEvent('state-changed'));
+  const { q, r } = state.player.position;
+  const ring = getHexRing(state, q, r);
+  const canShowMerchant = state.phase === 'playerTurn' ? ring : -1;
+  updateMerchantVisibility(canShowMerchant);
+  if (state.phase !== 'playerTurn') {
+    closeMerchant();
+  }
+  window.dispatchEvent(new CustomEvent('state-changed', { detail: { state } }));
 }
 
 function resizeCanvas() {
@@ -58,8 +73,12 @@ function handleMoveToHex(target) {
   }
 
   // Otherwise, move
+  const before = state.player.position;
   state = movePlayer(state, target);
   emitStateChanged();
+  if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
+    window.dispatchEvent(new CustomEvent('player-moved'));
+  }
 }
 
 function getDirectionFromDelta(dq, dr) {
@@ -97,11 +116,19 @@ function handleMoveDirection(direction) {
     (direction === 'S' && (backwardDir === 'SE' || backwardDir === 'SW'));
 
   if (wantsForward) {
+    const before = state.player.position;
     state = movePlayer(state, forwardPos);
     emitStateChanged();
+    if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
+      window.dispatchEvent(new CustomEvent('player-moved'));
+    }
   } else if (wantsBackward) {
+    const before = state.player.position;
     state = movePlayer(state, backwardPos);
     emitStateChanged();
+    if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
+      window.dispatchEvent(new CustomEvent('player-moved'));
+    }
   }
 }
 
@@ -116,6 +143,7 @@ const cleanupInput = setupInputControls(canvas, view, {
 
 function handleEndTurnKey(e) {
   if (e.key !== 'Enter') return;
+  if (document.body.classList.contains('merchant-open')) return;
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
     return;
   }
@@ -136,9 +164,25 @@ window.addEventListener('card-played', (e) => {
 });
 
 window.addEventListener('end-turn', () => {
+  if (document.body.classList.contains('merchant-open')) return;
   if (state.phase !== 'playerTurn') return;
   state = endPlayerTurn(state);
   state = runEnemyPhase(state);
+  emitStateChanged();
+});
+
+window.addEventListener('crystal-sold', (e) => {
+  const { cardId, value } = e.detail || {};
+  if (!cardId || !Number.isFinite(value)) return;
+  state = removeCardFromHand(state, cardId);
+  state = addPlayerGold(state, value);
+  emitStateChanged();
+});
+
+window.addEventListener('merchant-buy', (e) => {
+  const { cardType } = e.detail || {};
+  if (!cardType) return;
+  state = buyMerchantCard(state, cardType);
   emitStateChanged();
 });
 
