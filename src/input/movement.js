@@ -4,7 +4,7 @@
  * No game logic; only emits movement intents via callbacks.
  */
 
-import { HEX_SIZE, BOARD_RADIUS } from '../config/index.js';
+import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y } from '../config/index.js';
 
 const SQRT_3 = Math.sqrt(3);
 
@@ -60,6 +60,7 @@ function pixelToAxial(px, py, hexSize) {
 
 /**
  * Convert screen coordinates to world coordinates.
+ * Inverts the isometric Y compression applied during rendering.
  * @param {number} screenX - x in CSS pixels relative to canvas
  * @param {number} screenY - y in CSS pixels relative to canvas
  * @param {number} canvasWidth - canvas CSS width
@@ -69,7 +70,8 @@ function pixelToAxial(px, py, hexSize) {
  */
 function screenToWorld(screenX, screenY, canvasWidth, canvasHeight, view) {
   const worldX = (screenX - canvasWidth / 2 - view.panX) / view.zoom;
-  const worldY = (screenY - canvasHeight / 2 - view.panY) / view.zoom;
+  // Invert isometric Y compression: render applies zoom * ISO_SCALE_Y to Y
+  const worldY = (screenY - canvasHeight / 2 - view.panY) / (view.zoom * ISO_SCALE_Y);
   return { x: worldX, y: worldY };
 }
 

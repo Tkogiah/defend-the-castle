@@ -30,13 +30,14 @@ export function drawGrid(ctx, hexGrid) {
 }
 
 /**
- * Draw a single hex at the given pixel coordinates.
+ * Draw a single hex at the given pixel coordinates with isometric lighting.
+ * Light source is top-left; creates gradient from light (top-left) to shadow (bottom-right).
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x - center x in pixels
  * @param {number} y - center y in pixels
  * @param {number} size - hex size
  * @param {string} strokeStyle - stroke color
- * @param {string|null} fillStyle - fill color (optional)
+ * @param {string|null} fillStyle - base fill color (optional)
  */
 function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
   const corners = [];
@@ -57,13 +58,57 @@ function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
   ctx.closePath();
 
   if (fillStyle) {
-    ctx.fillStyle = fillStyle;
+    // Create gradient from top-left to bottom-right for isometric lighting
+    const gradient = ctx.createLinearGradient(
+      x - size * 0.7, y - size * 0.7,  // Top-left (light)
+      x + size * 0.7, y + size * 0.7   // Bottom-right (shadow)
+    );
+    // Parse base color and create light/shadow variants
+    const { lightColor, shadowColor } = getLightingShadowColors(fillStyle);
+    gradient.addColorStop(0, lightColor);
+    gradient.addColorStop(0.5, fillStyle);
+    gradient.addColorStop(1, shadowColor);
+    ctx.fillStyle = gradient;
     ctx.fill();
   }
 
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = 1;
   ctx.stroke();
+}
+
+/**
+ * Generate light and shadow color variants for isometric lighting effect.
+ * @param {string} baseColor - rgba or hex color string
+ * @returns {{ lightColor: string, shadowColor: string }}
+ */
+function getLightingShadowColors(baseColor) {
+  // Parse rgba format: rgba(r, g, b, a)
+  const rgbaMatch = baseColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+  if (rgbaMatch) {
+    const r = parseInt(rgbaMatch[1], 10);
+    const g = parseInt(rgbaMatch[2], 10);
+    const b = parseInt(rgbaMatch[3], 10);
+    const a = rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1;
+
+    // Light: brighten by 25%
+    const lr = Math.min(255, Math.round(r + (255 - r) * 0.25));
+    const lg = Math.min(255, Math.round(g + (255 - g) * 0.25));
+    const lb = Math.min(255, Math.round(b + (255 - b) * 0.25));
+
+    // Shadow: darken by 30%
+    const sr = Math.round(r * 0.7);
+    const sg = Math.round(g * 0.7);
+    const sb = Math.round(b * 0.7);
+
+    return {
+      lightColor: `rgba(${lr}, ${lg}, ${lb}, ${a})`,
+      shadowColor: `rgba(${sr}, ${sg}, ${sb}, ${a})`,
+    };
+  }
+
+  // Fallback for hex colors (shouldn't happen with current code path)
+  return { lightColor: baseColor, shadowColor: baseColor };
 }
 
 // --- Color utilities ---

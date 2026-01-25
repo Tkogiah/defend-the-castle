@@ -6,6 +6,7 @@
 import { drawGrid } from './grid.js';
 import { drawPlayer, drawEnemies } from './entities.js';
 import { getMovementRange, drawMovementRange, drawAttackRange } from './overlays.js';
+import { ISO_SCALE_Y } from '../config/index.js';
 
 /**
  * Render a single frame to the canvas.
@@ -24,10 +25,10 @@ export function renderFrame(ctx, canvas, state, view) {
   ctx.fillStyle = '#121a17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Center hex (0,0) at canvas center with pan/zoom transform
+  // Center hex (0,0) at canvas center with pan/zoom and isometric transform
   ctx.save();
   ctx.translate(cssWidth / 2 + view.panX, cssHeight / 2 + view.panY);
-  ctx.scale(view.zoom, view.zoom);
+  ctx.scale(view.zoom, view.zoom * ISO_SCALE_Y); // Apply isometric Y compression
 
   // Draw game elements in order: grid → movement range → attack range → enemies → player
   drawGrid(ctx, state.hexGrid);

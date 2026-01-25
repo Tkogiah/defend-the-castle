@@ -12,6 +12,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 ## Next
 - Build hex grid generation and coordinate conversions.
 - Implement basic turn progression (player -> enemies -> check win/lose).
+- Define a git branching plan for video capture/documentation workflow before integrating updates.
 
 ## Later
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.

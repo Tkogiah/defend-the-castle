@@ -19,7 +19,7 @@ import {
   updateMerchantVisibility,
   closeMerchant,
 } from './ui.js';
-import { HEX_SIZE, BOARD_RADIUS } from './config/index.js';
+import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y, FIT_PADDING } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -52,6 +52,18 @@ function resizeCanvas() {
   canvas.width = Math.round(rect.width * ratio);
   canvas.height = Math.round(rect.height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  updateViewToFit(rect.width, rect.height);
+}
+
+function updateViewToFit(cssWidth, cssHeight) {
+  // Fit the full board in view without cropping.
+  const boardWidth = Math.sqrt(3) * HEX_SIZE * (2 * BOARD_RADIUS + 1);
+  const boardHeight = HEX_SIZE * (3 * BOARD_RADIUS + 2);
+  const zoomX = cssWidth / boardWidth;
+  const zoomY = cssHeight / (boardHeight * ISO_SCALE_Y);
+  view.zoom = Math.min(zoomX, zoomY) * FIT_PADDING;
+  view.panX = 0;
+  view.panY = 0;
 }
 
 function loop() {

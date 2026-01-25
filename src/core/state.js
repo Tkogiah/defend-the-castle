@@ -45,7 +45,7 @@ export function createInitialState(hexGrid = new Map()) {
       baseDamage: 10,
       range: 2,
       attackPoints: 0,
-      gold: 1000,
+      gold: 0,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
 
