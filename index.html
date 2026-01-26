@@ -19,19 +19,13 @@
       <button id="btn-hand" class="ui-btn bottom-right">Hand</button>
       <button id="btn-merchant" class="ui-btn bottom-left hidden">Merchant</button>
 
-      <!-- Card detail panel (top 60%, hidden by default) -->
+      <!-- Card detail panel (drop zone only) -->
       <div id="card-detail" class="card-detail hidden">
         <div class="card-detail-zones">
-          <div class="drop-zone drop-zone-left" data-action="movement">
-            <span>Movement</span>
+          <div class="drop-zone" id="play-card-zone">
+            <span class="drop-zone-title"></span>
+            <span class="drop-zone-desc"></span>
           </div>
-          <div class="drop-zone drop-zone-right" data-action="attack">
-            <span>Attack</span>
-          </div>
-        </div>
-        <div class="card-detail-content">
-          <h2 id="card-detail-name">Card Name</h2>
-          <p id="card-detail-desc">Card description goes here.</p>
         </div>
       </div>
 

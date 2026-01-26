@@ -41,13 +41,22 @@ export function createInitialState(hexGrid = new Map()) {
     player: {
       position: { q: 0, r: 0 }, // axial coords, starts at center
       baseMovement: 3,
-      movementPoints: 0, 
+      movementPoints: 0,
       baseDamage: 10,
       range: 2,
       attackPoints: 0,
-      gold: 0,
+      gold: 100,
       gear: null, // single gear slot for MVP
       isKnockedOut: false,
+
+      // Turn-scoped bonuses (reset at start of each turn)
+      turnBonus: {
+        range: 0,
+        baseMovement: 0,
+        baseDamage: 0,
+      },
+      // Flag for Ice card: next attack freezes target
+      nextAttackFreezes: false,
 
       // Deck system (cards: { id, type, value })
       deck: createStarterDeck(),
@@ -139,6 +148,31 @@ export function setPlayerKnockedOut(state, isKnockedOut) {
   return { ...state, player: { ...state.player, isKnockedOut } };
 }
 
+export function setPlayerTurnBonus(state, bonuses) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      turnBonus: { ...state.player.turnBonus, ...bonuses },
+    },
+  };
+}
+
+export function resetPlayerTurnBonus(state) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      turnBonus: { range: 0, baseMovement: 0, baseDamage: 0 },
+      nextAttackFreezes: false,
+    },
+  };
+}
+
+export function setNextAttackFreezes(state, value) {
+  return { ...state, player: { ...state.player, nextAttackFreezes: value } };
+}
+
 // Deck
 
 export function setDeck(state, deck) {
@@ -198,6 +232,10 @@ export function damageEnemy(state, enemyId, damage) {
   const enemy = state.enemies.find((e) => e.id === enemyId);
   if (!enemy) return state;
   return updateEnemy(state, enemyId, { hp: Math.max(0, enemy.hp - damage) });
+}
+
+export function setEnemyFrozen(state, enemyId, frozenTurns) {
+  return updateEnemy(state, enemyId, { frozenTurns });
 }
 
 // Wave

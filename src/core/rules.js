@@ -27,6 +27,10 @@ import {
   setPlayerMovementPoints,
   setPlayerAttackPoints,
   decrementShopPile,
+  setPlayerTurnBonus,
+  resetPlayerTurnBonus,
+  setNextAttackFreezes,
+  setEnemyFrozen,
 } from './state.js';
 import { getSpiralLabel, getSpiralAxial, axialDistance } from '../hex/index.js';
 import { createCrystalCard, createMerchantCard } from '../data/cards.js';
@@ -80,6 +84,7 @@ export function startPlayerTurn(state) {
   newState = setPhase(newState, 'playerTurn');
   newState = setPlayerAttackPoints(newState, 0);
   newState = setPlayerMovementPoints(newState, 0);
+  newState = resetPlayerTurnBonus(newState); // Reset turn-scoped bonuses
   newState = drawCards(newState, 5);
   return newState;
 }
@@ -162,13 +167,110 @@ export function playActionCard(state, cardId, choice) {
       newState.player.attackPoints + value
     );
   } else {
-    const speed = Number.isFinite(newState.player.baseMovement)
+    // Apply turn bonus to base movement
+    const baseSpeed = Number.isFinite(newState.player.baseMovement)
       ? newState.player.baseMovement
       : 0;
+    const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
+    const totalSpeed = baseSpeed + bonusSpeed;
     newState = setPlayerMovementPoints(
       newState,
-      newState.player.movementPoints + value * speed
+      newState.player.movementPoints + value * totalSpeed
     );
+  }
+
+  return newState;
+}
+
+/**
+ * Play a merchant card from hand.
+ * Applies the card's effect and moves it to discard.
+ * @param {Object} state - current game state
+ * @param {string} cardId - unique instance ID of the card to play
+ * @returns {Object} new state with effect applied
+ */
+export function playMerchantCard(state, cardId) {
+  const card = state.player.hand.find((c) => c.id === cardId);
+  if (!card || card.type !== 'merchant') return state;
+
+  let newState = removeCardFromHand(state, cardId);
+  newState = addCardToDiscard(newState, card);
+
+  // Get the base card type (strip instance suffix)
+  const cardType = card.id.split('_').slice(0, -1).join('_');
+
+  switch (cardType) {
+    case 'multitask':
+      // Gain 1 attack and 1 movement point
+      newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 1);
+      {
+        const baseSpeed = Number.isFinite(newState.player.baseMovement)
+          ? newState.player.baseMovement
+          : 0;
+        const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
+        const totalSpeed = baseSpeed + bonusSpeed;
+        newState = setPlayerMovementPoints(
+          newState,
+          newState.player.movementPoints + totalSpeed
+        );
+      }
+      break;
+
+    case 'second_wind':
+      // Draw 3 cards
+      newState = drawCards(newState, 3);
+      break;
+
+    case 'reach':
+      // +1 range for this turn
+      newState = setPlayerTurnBonus(newState, {
+        range: (newState.player.turnBonus?.range || 0) + 1,
+      });
+      break;
+
+    case 'boots_of_speed':
+      // +5 base movement for this turn
+      newState = setPlayerTurnBonus(newState, {
+        baseMovement: (newState.player.turnBonus?.baseMovement || 0) + 5,
+      });
+      break;
+
+    case 'sharpen':
+      // +5 base damage for this turn
+      newState = setPlayerTurnBonus(newState, {
+        baseDamage: (newState.player.turnBonus?.baseDamage || 0) + 5,
+      });
+      break;
+
+    case 'ice':
+      // +1 attack point and next attack freezes target
+      newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 1);
+      newState = setNextAttackFreezes(newState, true);
+      break;
+
+    case 'move_twice':
+      // +2 movement points (flat, not multiplied)
+      {
+        const baseSpeed = Number.isFinite(newState.player.baseMovement)
+          ? newState.player.baseMovement
+          : 0;
+        const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
+        const totalSpeed = baseSpeed + bonusSpeed;
+        newState = setPlayerMovementPoints(
+          newState,
+          newState.player.movementPoints + totalSpeed * 2
+        );
+      }
+      break;
+
+    case 'triple_attack':
+      // +3 attack points
+      newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 3);
+      break;
+
+    default:
+      // Unknown merchant card type - no effect
+      break;
   }
 
   return newState;
@@ -217,8 +319,18 @@ export function attackEnemy(state, enemyId) {
   const enemy = state.enemies.find((e) => e.id === enemyId);
   if (!enemy) return state;
 
-  const damage = state.player.baseDamage;
-  let newState = damageEnemy(state, enemyId, damage);
+  // Apply turn bonus to base damage
+  const baseDamage = state.player.baseDamage;
+  const bonusDamage = state.player.turnBonus?.baseDamage || 0;
+  const totalDamage = baseDamage + bonusDamage;
+
+  let newState = damageEnemy(state, enemyId, totalDamage);
+
+  // Handle Ice card freeze effect
+  if (state.player.nextAttackFreezes) {
+    newState = setEnemyFrozen(newState, enemyId, 1);
+    newState = setNextAttackFreezes(newState, false);
+  }
 
   // Award crystal card on attack based on player's ring distance from center
   const { q, r } = state.player.position;
@@ -255,9 +367,14 @@ export function tryAttackAtHex(state, targetPos) {
   const { q: pq, r: pr } = state.player.position;
   const { q: tq, r: tr } = targetPos;
 
-  // Must be within player's range
+  // Apply turn bonus to range
+  const baseRange = state.player.range;
+  const bonusRange = state.player.turnBonus?.range || 0;
+  const effectiveRange = baseRange + bonusRange;
+
+  // Must be within player's effective range
   const distance = axialDistance(pq, pr, tq, tr);
-  if (distance > state.player.range || distance === 0) {
+  if (distance > effectiveRange || distance === 0) {
     return state;
   }
 
@@ -357,6 +474,7 @@ export function spawnEnemies(state, count) {
       hp: 10,
       maxHp: 10,
       isBoss: false,
+      frozenTurns: 0, // Tracks freeze effect from Ice card
     };
     newState = {
       ...newState,
@@ -375,6 +493,7 @@ export function spawnEnemies(state, count) {
 /**
  * Move all enemies along the spiral path toward center.
  * Each enemy moves 1-10 random steps (counter-clockwise, decreasing label).
+ * Frozen enemies skip movement and have their freeze counter decremented.
  * @param {Object} state - current game state
  * @returns {Object} new state with updated enemy positions
  */
@@ -382,6 +501,13 @@ export function moveEnemies(state) {
   let newState = state;
 
   for (const enemy of state.enemies) {
+    // Handle frozen enemies
+    if (enemy.frozenTurns > 0) {
+      // Decrement freeze counter, skip movement
+      newState = setEnemyFrozen(newState, enemy.id, enemy.frozenTurns - 1);
+      continue;
+    }
+
     const currentLabel = getSpiralLabel(enemy.position.q, enemy.position.r);
     if (currentLabel === null) continue;
 

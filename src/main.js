@@ -13,6 +13,7 @@ import {
   spawnEnemies,
   checkPlayerKnockout,
   endEnemyTurn,
+  playMerchantCard,
 } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import {
@@ -282,8 +283,19 @@ window.addEventListener('keydown', handleEndTurnKey);
 
 window.addEventListener('card-played', (e) => {
   const { cardId, action } = e.detail || {};
-  if (!cardId || !action) return;
-  state = playActionCard(state, cardId, action);
+  if (!cardId) return;
+
+  const card = state.player.hand.find((c) => c.id === cardId);
+  if (!card) return;
+
+  if (card.type === 'action') {
+    if (!action) return;
+    state = playActionCard(state, cardId, action);
+  } else if (card.type === 'merchant') {
+    state = playMerchantCard(state, cardId);
+  } else {
+    return;
+  }
   emitStateChanged();
 });
 

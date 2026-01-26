@@ -13,8 +13,6 @@ import { renderHand, getCardData, subscribeToState } from './ui/hand.js';
 const drawer = document.getElementById('hand-drawer');
 const btnHand = document.getElementById('btn-hand');
 const cardDetail = document.getElementById('card-detail');
-const cardDetailName = document.getElementById('card-detail-name');
-const cardDetailDesc = document.getElementById('card-detail-desc');
 const uiBackdrop = document.getElementById('ui-backdrop');
 const merchantBackdrop = document.getElementById('merchant-backdrop');
 const characterSheet = document.getElementById('character-sheet');
@@ -22,7 +20,9 @@ const btnCharacter = document.getElementById('btn-character');
 const btnCloseSheet = document.getElementById('btn-close-sheet');
 const btnEndTurn = document.getElementById('btn-end-turn');
 const handCards = document.getElementById('hand-cards');
-const dropZones = document.querySelectorAll('.drop-zone');
+const dropZone = document.getElementById('play-card-zone');
+const dropZoneTitle = dropZone?.querySelector('.drop-zone-title');
+const dropZoneDesc = dropZone?.querySelector('.drop-zone-desc');
 const gameCanvas = document.getElementById('game-canvas');
 const statGold = document.getElementById('stat-gold');
 const statDamage = document.getElementById('stat-damage');
@@ -43,9 +43,14 @@ const btnCloseMerchant = document.getElementById('btn-close-merchant');
 
 let selectedCard = null;
 let draggedCard = null;
+let pendingDragCard = null;
 let draggedMerchantSlot = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let dragStartX = 0;
+let dragStartY = 0;
+const DRAG_THRESHOLD_PX = 6;
+const actionModeByCardId = new Map();
 let merchantOpen = false;
 let currentPlayerRing = null;
 let currentPlayerGold = 0;
@@ -57,6 +62,9 @@ let currentShopPiles = [];
 
 function closeHandDrawer() {
   drawer.classList.add('collapsed');
+  cardDetail.classList.add('hidden');
+  if (dropZoneTitle) dropZoneTitle.textContent = '';
+  if (dropZoneDesc) dropZoneDesc.textContent = '';
 }
 
 function openHandDrawer() {
@@ -79,7 +87,11 @@ function openCharacterSheet() {
 
 btnHand?.addEventListener('click', () => {
   closeCharacterSheet();
-  drawer.classList.toggle('collapsed');
+  if (drawer.classList.contains('collapsed')) {
+    openHandDrawer();
+  } else {
+    closeHandDrawer();
+  }
 });
 
 // -----------------------------
@@ -91,31 +103,63 @@ handCards.addEventListener('click', (e) => {
   if (!slot) return;
 
   // Deselect previous
-  if (selectedCard) {
+  if (selectedCard && selectedCard !== slot) {
     selectedCard.classList.remove('selected');
   }
 
-  // Select new (or deselect if same)
-  if (selectedCard === slot) {
-    selectedCard = null;
-    cardDetail.classList.add('hidden');
-  } else {
-    selectedCard = slot;
-    slot.classList.add('selected');
-    showCardDetail(slot);
-  }
+  // Select (or keep selected) then toggle action mode if applicable
+  selectedCard = slot;
+  slot.classList.add('selected');
+  toggleActionMode(slot);
+  showCardDetail(slot);
 });
 
 function showCardDetail(slot) {
   const cardData = getCardData(slot);
-  if (cardData) {
-    cardDetailName.textContent = cardData.name;
-    cardDetailDesc.textContent = cardData.description || 'No description.';
-  } else {
-    cardDetailName.textContent = 'Card';
-    cardDetailDesc.textContent = '';
+  if (cardData && dropZoneTitle && dropZoneDesc) {
+    if (cardData.type === 'action') {
+      const modeLabel = cardData.actionMode === 'attack' ? 'Attack' : 'Move';
+      dropZoneTitle.textContent = modeLabel;
+      dropZoneDesc.textContent =
+        modeLabel === 'Attack'
+          ? 'Grants +1 attack.'
+          : 'Grants +1 movement.';
+    } else {
+      dropZoneTitle.textContent = cardData.name;
+      dropZoneDesc.textContent = cardData.description || '';
+    }
+  } else if (dropZoneTitle && dropZoneDesc) {
+    dropZoneTitle.textContent = '';
+    dropZoneDesc.textContent = '';
   }
   cardDetail.classList.remove('hidden');
+}
+
+function toggleActionMode(slot) {
+  const cardData = getCardData(slot);
+  if (!cardData || cardData.type !== 'action') return;
+  const nextMode = cardData.actionMode === 'attack' ? 'movement' : 'attack';
+  slot.dataset.actionMode = nextMode;
+  actionModeByCardId.set(cardData.id, nextMode);
+  const modeEl = slot.querySelector('.card-mode');
+  if (modeEl) {
+    modeEl.textContent = nextMode === 'attack' ? 'Attack' : 'Move';
+  }
+}
+
+function syncActionModes() {
+  if (!handCards) return;
+  const actionSlots = handCards.querySelectorAll('.card-slot[data-card-type="action"]');
+  actionSlots.forEach((slot) => {
+    const cardData = getCardData(slot);
+    if (!cardData) return;
+    const mode = actionModeByCardId.get(cardData.id) || 'movement';
+    slot.dataset.actionMode = mode;
+    const modeEl = slot.querySelector('.card-mode');
+    if (modeEl) {
+      modeEl.textContent = mode === 'attack' ? 'Attack' : 'Move';
+    }
+  });
 }
 
 // Close card detail when clicking outside
@@ -140,35 +184,20 @@ function startDrag(e) {
   const slot = e.target.closest('.card-slot');
   if (!slot || !slot.classList.contains('has-card')) return;
 
-  e.preventDefault();
-  draggedCard = slot;
-  slot.classList.add('dragging');
+  pendingDragCard = slot;
   const cardData = getCardData(slot);
-  if (!merchantOpen && cardData?.type === 'action') {
+  if (!merchantOpen && cardData) {
     cardDetail.classList.remove('hidden');
   } else {
     cardDetail.classList.add('hidden');
   }
 
   const touch = e.touches ? e.touches[0] : e;
+  dragStartX = touch.clientX;
+  dragStartY = touch.clientY;
   const rect = slot.getBoundingClientRect();
   dragOffsetX = touch.clientX - rect.left;
   dragOffsetY = touch.clientY - rect.top;
-
-  // Create drag ghost
-  const ghost = slot.cloneNode(true);
-  ghost.id = 'drag-ghost';
-  ghost.style.cssText = `
-    position: fixed;
-    left: ${rect.left}px;
-    top: ${rect.top}px;
-    width: ${rect.width}px;
-    height: ${rect.height}px;
-    pointer-events: none;
-    z-index: 300;
-    opacity: 0.9;
-  `;
-  document.body.appendChild(ghost);
 
   document.addEventListener('mousemove', onDrag);
   document.addEventListener('touchmove', onDrag, { passive: false });
@@ -177,38 +206,69 @@ function startDrag(e) {
 }
 
 function onDrag(e) {
-  if (!draggedCard) return;
+  if (!pendingDragCard && !draggedCard) return;
   e.preventDefault();
+
+  const touch = e.touches ? e.touches[0] : e;
+
+  // Start drag only after threshold
+  if (!draggedCard && pendingDragCard) {
+    const dx = touch.clientX - dragStartX;
+    const dy = touch.clientY - dragStartY;
+    if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) {
+      return;
+    }
+    draggedCard = pendingDragCard;
+    pendingDragCard = null;
+    draggedCard.classList.add('dragging');
+
+    // Update drop zone with card info
+    const dragCardData = getCardData(draggedCard);
+    if (dragCardData && dropZoneTitle && dropZoneDesc) {
+      if (dragCardData.type === 'action') {
+        const modeLabel = dragCardData.actionMode === 'attack' ? 'Attack' : 'Move';
+        dropZoneTitle.textContent = modeLabel;
+        dropZoneDesc.textContent = modeLabel === 'Attack' ? 'Grants +1 attack.' : 'Grants +1 movement.';
+      } else {
+        dropZoneTitle.textContent = dragCardData.name;
+        dropZoneDesc.textContent = dragCardData.description || '';
+      }
+    }
+
+    const rect = draggedCard.getBoundingClientRect();
+    // Create drag ghost
+    const ghost = draggedCard.cloneNode(true);
+    ghost.id = 'drag-ghost';
+    ghost.style.cssText = `
+      position: fixed;
+      left: ${rect.left}px;
+      top: ${rect.top}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      pointer-events: none;
+      z-index: 300;
+      opacity: 0.9;
+    `;
+    document.body.appendChild(ghost);
+  }
 
   const ghost = document.getElementById('drag-ghost');
   if (!ghost) return;
-
-  const touch = e.touches ? e.touches[0] : e;
   ghost.style.left = `${touch.clientX - dragOffsetX}px`;
   ghost.style.top = `${touch.clientY - dragOffsetY}px`;
 
   const cardData = getCardData(draggedCard);
-  const allowActionDrop = !merchantOpen && cardData?.type === 'action';
-
-  // Check drop zones (action cards) only when allowed
-  if (allowActionDrop) {
-    dropZones.forEach((zone) => {
-      const rect = zone.getBoundingClientRect();
-      const inZone =
-        touch.clientX >= rect.left &&
-        touch.clientX <= rect.right &&
-        touch.clientY >= rect.top &&
-        touch.clientY <= rect.bottom;
-      zone.classList.toggle('drag-over', inZone);
-    });
-
-    const overMove = dropZones[0]?.classList.contains('drag-over');
-    const overAttack = dropZones[1]?.classList.contains('drag-over');
-    cardDetail.classList.toggle('drag-movement', !!overMove);
-    cardDetail.classList.toggle('drag-attack', !!overAttack);
-  } else {
-    dropZones.forEach((zone) => zone.classList.remove('drag-over'));
-    cardDetail.classList.remove('drag-movement', 'drag-attack');
+  // Check play card drop zone (any card type when merchant not open)
+  if (!merchantOpen && dropZone) {
+    const rect = dropZone.getBoundingClientRect();
+    const inZone =
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom;
+    dropZone.classList.toggle('drag-over', inZone);
+  } else if (dropZone) {
+    dropZone.classList.remove('drag-over');
   }
 
   // Check merchant drop zone (crystal cards only)
@@ -227,12 +287,19 @@ function onDrag(e) {
 }
 
 function endDrag(e) {
-  if (!draggedCard) return;
+  if (!draggedCard) {
+    // No drag started; cleanup pending state
+    pendingDragCard = null;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', endDrag);
+    document.removeEventListener('touchend', endDrag);
+    return;
+  }
 
   const ghost = document.getElementById('drag-ghost');
   const touch = e.changedTouches ? e.changedTouches[0] : e;
   const cardData = getCardData(draggedCard);
-  const allowActionDrop = !merchantOpen && cardData?.type === 'action';
 
   // Check if dropped on merchant (crystal cards only)
   let soldToMerchant = false;
@@ -302,56 +369,43 @@ function endDrag(e) {
     }
   }
 
-  // Check if dropped on action zone (if not sold to merchant and allowed)
-  
-  if (!soldToMerchant && allowActionDrop) {
-    let droppedZone = null;
-    dropZones.forEach((zone) => {
-      const rect = zone.getBoundingClientRect();
-      const inZone =
-        touch.clientX >= rect.left &&
-        touch.clientX <= rect.right &&
-        touch.clientY >= rect.top &&
-        touch.clientY <= rect.bottom;
-      if (inZone) {
-        droppedZone = zone;
-      }
-      zone.classList.remove('drag-over');
-    });
-  
+  // Check if dropped on play card zone (any card type when merchant not open)
+  let droppedOnPlayZone = false;
+  if (!soldToMerchant && !merchantOpen && dropZone) {
+    const rect = dropZone.getBoundingClientRect();
+    droppedOnPlayZone =
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom;
+    dropZone.classList.remove('drag-over');
+  }
 
-  if (droppedZone && cardData) {
-      const action = droppedZone.dataset.action; // 'movement' or 'attack'
+  if (droppedOnPlayZone && cardData) {
+    // Play card animation
+    draggedCard.classList.add('played');
+    draggedCard.classList.remove('dragging');
+    cardDetail.classList.add('hidden');
 
-      // Play card animation
-      draggedCard.classList.add('played');
-      draggedCard.classList.remove('dragging');
-      cardDetail.classList.add('hidden');
+    // Emit card-played event for main.js to handle
+    window.dispatchEvent(
+      new CustomEvent('card-played', {
+        detail: {
+          cardId: cardData.id,
+          action: cardData.type === 'action' ? cardData.actionMode : undefined,
+        },
+      })
+    );
 
-      // Emit card-played event for main.js to handle
-      window.dispatchEvent(
-        new CustomEvent('card-played', {
-          detail: {
-            cardId: cardData.id,
-            action: action,
-          },
-        })
-      );
+    // Remove card element after animation
+    const cardToRemove = draggedCard;
+    setTimeout(() => {
+      cardToRemove.remove();
+    }, 500);
 
-      // Remove card element after animation
-      const cardToRemove = draggedCard;
-      setTimeout(() => {
-        cardToRemove.remove();
-      }, 500);
-
-      draggedCard = null;
-    } else if (draggedCard) {
-      // Snap back
-      draggedCard.classList.remove('dragging');
-      draggedCard = null;
-    }
+    draggedCard = null;
   } else if (!soldToMerchant && draggedCard) {
-    // Snap back if merchant open or non-action card
+    // Snap back
     draggedCard.classList.remove('dragging');
     draggedCard = null;
   }
@@ -372,9 +426,12 @@ function endDrag(e) {
     selectedCard = null;
   }
 
-  cardDetail.classList.remove('drag-movement', 'drag-attack');
   cardDetail.classList.add('hidden');
   merchantDropZone?.classList.remove('drag-active');
+
+  // Clear drop zone text
+  if (dropZoneTitle) dropZoneTitle.textContent = '';
+  if (dropZoneDesc) dropZoneDesc.textContent = '';
 }
 
 // -----------------------------
@@ -412,7 +469,6 @@ function openMerchant() {
   closeCharacterSheet();
   openHandDrawer();
   cardDetail.classList.add('hidden');
-  cardDetail.classList.remove('drag-movement', 'drag-attack');
   btnMerchant?.classList.add('hidden');
   merchantBackdrop?.classList.remove('hidden');
   merchantPanel?.classList.remove('hidden');
@@ -627,6 +683,10 @@ window.addEventListener('state-changed', (e) => {
     currentShopPiles = state.shop.piles;
     renderMerchantSlots(currentShopPiles);
   }
+});
+
+window.addEventListener('hand-rendered', () => {
+  syncActionModes();
 });
 
 window.addEventListener('player-moved', () => {

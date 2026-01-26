@@ -27,15 +27,27 @@ export function createCardElement(card) {
   el.dataset.cardType = card.type;
   el.dataset.cardName = card.name;
   el.dataset.cardDesc = card.description || '';
+  if (card.type === 'action') {
+    el.dataset.actionMode = 'movement';
+  }
   if (typeof card.value !== 'undefined') {
     el.dataset.cardValue = card.value;
   }
 
-  // Card label
-  const label = document.createElement('span');
-  label.className = 'card-label';
-  label.textContent = card.name;
-  el.appendChild(label);
+  // Card label (omit for action cards to avoid redundant text)
+  if (card.type !== 'action') {
+    const label = document.createElement('span');
+    label.className = 'card-label';
+    label.textContent = card.name;
+    el.appendChild(label);
+  }
+
+  if (card.type === 'action') {
+    const mode = document.createElement('span');
+    mode.className = 'card-mode';
+    mode.textContent = 'Move';
+    el.appendChild(mode);
+  }
 
   return el;
 }
@@ -68,6 +80,9 @@ export function renderHand(player) {
   if (discardCountEl) {
     discardCountEl.textContent = player.discard.length;
   }
+
+  // Notify UI layer that hand DOM has been rebuilt.
+  window.dispatchEvent(new CustomEvent('hand-rendered'));
 }
 
 // -----------------------------
@@ -104,6 +119,7 @@ export function getCardData(el) {
     type: el.dataset.cardType,
     name: el.dataset.cardName,
     description: el.dataset.cardDesc,
+    actionMode: el.dataset.actionMode,
     value: el.dataset.cardValue ? Number(el.dataset.cardValue) : undefined,
   };
 }
