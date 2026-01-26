@@ -46,6 +46,7 @@ let state = createInitialState(generateHexGrid());
 state = startPlayerTurn(state);
 subscribeToState(() => state);
 emitStateChanged();
+let enemyPhaseInProgress = false;
 
 function emitStateChanged() {
   const { q, r } = state.player.position;
@@ -167,6 +168,9 @@ function buildEnemyMoves(beforeState, afterState) {
 function beginEnemyPhaseWithAnimation() {
   if (state.phase !== 'playerTurn') return;
   if (isAnimatingEnemies()) return;
+  if (isAnimatingPlayer()) return;
+  if (enemyPhaseInProgress) return;
+  enemyPhaseInProgress = true;
 
   let enemyBaseState = endPlayerTurn(state);
   if (enemyBaseState.wave.enemiesSpawned === 0) {
@@ -184,6 +188,7 @@ function beginEnemyPhaseWithAnimation() {
     state = { ...state, enemies: movedState.enemies };
     state = checkPlayerKnockout(state);
     state = endEnemyTurn(state);
+    enemyPhaseInProgress = false;
     emitStateChanged();
   });
 }
@@ -268,6 +273,7 @@ function handleEndTurnKey(e) {
     return;
   }
   if (state.phase !== 'playerTurn') return;
+  if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
   e.preventDefault();
   beginEnemyPhaseWithAnimation();
 }
@@ -284,6 +290,7 @@ window.addEventListener('card-played', (e) => {
 window.addEventListener('end-turn', () => {
   if (document.body.classList.contains('merchant-open')) return;
   if (state.phase !== 'playerTurn') return;
+  if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
   beginEnemyPhaseWithAnimation();
 });
 

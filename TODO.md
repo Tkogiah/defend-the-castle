@@ -20,6 +20,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.
 - Update attack targeting to respect player.range (needed for archer range 3 and future classes).
 - Revisit enemy passing-player behavior during enemy movement (animation will show enemies traversing hexes even if they end elsewhere); decide if “pass-through” should also trigger loss or if only landing on player hex ends game.
+- Consider formal turn-phase state machine to avoid re-entrancy during animations (post-MVP).
 - Extract a reusable AI-agent context framework from this project (roles, read order, guardrails) so it can be reused like functions across other codebases; goal is to avoid re-writing context and treat agent setup as portable building blocks.
 - Multiplayer architecture spike (WebSockets).
 - Hybrid real-time within-hex movement (post-MVP).

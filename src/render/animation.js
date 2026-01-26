@@ -14,7 +14,7 @@ const ENEMY_MOVE_DURATION = 120;      // ms per hex
 const ENEMY_STAGGER_DELAY = 80;       // ms between enemy animation starts
 
 // Player drift constants
-const PLAYER_DRIFT_SPEED = HEX_SIZE * 3;  // pixels per second
+const PLAYER_DRIFT_SPEED = HEX_SIZE * 3.5;  // pixels per second
 const HEX_BOUNDARY_THRESHOLD = HEX_SIZE * 1;  // distance from center to trigger boundary
 
 // Direction vectors for hex movement (pointy-top)

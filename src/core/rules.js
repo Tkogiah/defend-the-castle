@@ -79,7 +79,7 @@ export function startPlayerTurn(state) {
   let newState = incrementTurn(state);
   newState = setPhase(newState, 'playerTurn');
   newState = setPlayerAttackPoints(newState, 0);
-  newState = setPlayerMovementPoints(newState, 20);
+  newState = setPlayerMovementPoints(newState, 0);
   newState = drawCards(newState, 5);
   return newState;
 }
