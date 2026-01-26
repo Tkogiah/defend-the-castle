@@ -2,7 +2,6 @@ import {
   createInitialState,
   startPlayerTurn,
   endPlayerTurn,
-  runEnemyPhase,
   movePlayer,
   tryAttackAtHex,
   playActionCard,
@@ -10,9 +9,22 @@ import {
   addPlayerGold,
   getHexRing,
   buyMerchantCard,
+  moveEnemies,
+  spawnEnemies,
+  checkPlayerKnockout,
+  endEnemyTurn,
 } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
-import { renderFrame } from './render/index.js';
+import {
+  renderFrame,
+  startPlayerAnimation,
+  startEnemyAnimations,
+  isAnimatingPlayer,
+  isAnimatingEnemies,
+  setPlayerHeldDirection,
+  setPlayerBoundaryCallback,
+  resetPlayerDrift,
+} from './render/index.js';
 import { setupInputControls } from './input/index.js';
 import {
   subscribeToState,
@@ -71,26 +83,156 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+function buildSpiralPath(from, to) {
+  const startLabel = getSpiralLabel(from.q, from.r);
+  const endLabel = getSpiralLabel(to.q, to.r);
+  if (startLabel === null || endLabel === null) return [from];
+
+  const step = endLabel >= startLabel ? 1 : -1;
+  const path = [];
+  for (let label = startLabel; label !== endLabel + step; label += step) {
+    const pos = getSpiralAxial(label);
+    if (pos) path.push(pos);
+  }
+  return path;
+}
+
+function startPlayerMoveSequence(path) {
+  if (!Array.isArray(path) || path.length < 2) return;
+  if (isAnimatingPlayer()) return;
+
+  let stepIndex = 0;
+  const moveNext = () => {
+    if (stepIndex >= path.length - 1) return;
+    const from = path[stepIndex];
+    const to = path[stepIndex + 1];
+    const nextState = movePlayer(state, to);
+    const moved =
+      nextState.player.position.q !== state.player.position.q ||
+      nextState.player.position.r !== state.player.position.r;
+    if (!moved) return;
+
+    startPlayerAnimation(from, to, () => {
+      state = nextState;
+      emitStateChanged();
+      window.dispatchEvent(new CustomEvent('player-moved'));
+      stepIndex += 1;
+      if (stepIndex < path.length - 1) {
+        moveNext();
+      }
+    });
+  };
+
+  moveNext();
+}
+
+function resolveStepForDirection(direction) {
+  const { q, r } = state.player.position;
+  const currentLabel = getSpiralLabel(q, r);
+  if (currentLabel === null) return null;
+
+  const forwardPos = getSpiralAxial(currentLabel + 1);
+  const backwardPos = getSpiralAxial(currentLabel - 1);
+
+  const forwardDir = forwardPos
+    ? getDirectionFromDelta(forwardPos.q - q, forwardPos.r - r)
+    : null;
+  const backwardDir = backwardPos
+    ? getDirectionFromDelta(backwardPos.q - q, backwardPos.r - r)
+    : null;
+
+  if (direction === forwardDir && forwardPos) {
+    return forwardPos;
+  }
+  if (direction === backwardDir && backwardPos) {
+    return backwardPos;
+  }
+  return null;
+}
+
+function buildEnemyMoves(beforeState, afterState) {
+  const beforeById = new Map(beforeState.enemies.map((e) => [e.id, e]));
+  const moves = [];
+  for (const enemy of afterState.enemies) {
+    const before = beforeById.get(enemy.id);
+    if (!before) continue;
+    const path = buildSpiralPath(before.position, enemy.position);
+    if (path.length >= 2) {
+      moves.push({ enemyId: enemy.id, path });
+    }
+  }
+  return moves;
+}
+
+function beginEnemyPhaseWithAnimation() {
+  if (state.phase !== 'playerTurn') return;
+  if (isAnimatingEnemies()) return;
+
+  let enemyBaseState = endPlayerTurn(state);
+  if (enemyBaseState.wave.enemiesSpawned === 0) {
+    enemyBaseState = spawnEnemies(enemyBaseState, 10);
+  }
+
+  // Start new player turn immediately (player can act while enemies move).
+  state = startPlayerTurn(enemyBaseState);
+  emitStateChanged();
+
+  const movedState = moveEnemies(enemyBaseState);
+  const moves = buildEnemyMoves(enemyBaseState, movedState);
+
+  startEnemyAnimations(moves, () => {
+    state = { ...state, enemies: movedState.enemies };
+    state = checkPlayerKnockout(state);
+    state = endEnemyTurn(state);
+    emitStateChanged();
+  });
+}
+
+setPlayerBoundaryCallback((direction) => {
+  if (!direction) return { valid: false };
+  if (isAnimatingPlayer()) return { valid: false };
+  if (direction === 'N' || direction === 'S') return { valid: false };
+
+  const toHex = resolveStepForDirection(direction);
+  if (!toHex) return { valid: false };
+
+  const nextState = movePlayer(state, toHex);
+  const moved =
+    nextState.player.position.q !== state.player.position.q ||
+    nextState.player.position.r !== state.player.position.r;
+  if (!moved) return { valid: false };
+
+  return {
+    valid: true,
+    toHex,
+    onComplete: () => {
+      state = nextState;
+      emitStateChanged();
+      window.dispatchEvent(new CustomEvent('player-moved'));
+    },
+  };
+});
+
 function handleMoveToHex(target) {
-  const { q: pq, r: pr } = state.player.position;
+  if (isAnimatingPlayer()) return;
   const { q: tq, r: tr } = target;
 
   const hasEnemy = state.enemies.some(
     (e) => e.position.q === tq && e.position.r === tr
   );
   if (hasEnemy) {
+    if (isAnimatingEnemies()) return;
     state = tryAttackAtHex(state, target);
     emitStateChanged();
     return;
   }
 
-  // Otherwise, move
-  const before = state.player.position;
-  state = movePlayer(state, target);
-  emitStateChanged();
-  if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
-    window.dispatchEvent(new CustomEvent('player-moved'));
-  }
+  // Clear drift/held input to avoid visual overlap during click-to-move sequences.
+  setPlayerHeldDirection(null);
+  resetPlayerDrift();
+
+  const path = buildSpiralPath(state.player.position, target);
+  startPlayerMoveSequence(path);
 }
 
 function getDirectionFromDelta(dq, dr) {
@@ -104,43 +246,9 @@ function getDirectionFromDelta(dq, dr) {
 }
 
 function handleMoveDirection(direction) {
-  const { q, r } = state.player.position;
-  const currentLabel = getSpiralLabel(q, r);
-  if (currentLabel === null) return;
-
-  const forwardPos = getSpiralAxial(currentLabel + 1);
-  const backwardPos = getSpiralAxial(currentLabel - 1);
-
-  const forwardDir = forwardPos
-    ? getDirectionFromDelta(forwardPos.q - q, forwardPos.r - r)
-    : null;
-  const backwardDir = backwardPos
-    ? getDirectionFromDelta(backwardPos.q - q, backwardPos.r - r)
-    : null;
-
-  const wantsForward =
-    direction === forwardDir ||
-    (direction === 'N' && (forwardDir === 'NE' || forwardDir === 'NW')) ||
-    (direction === 'S' && (forwardDir === 'SE' || forwardDir === 'SW'));
-  const wantsBackward =
-    direction === backwardDir ||
-    (direction === 'N' && (backwardDir === 'NE' || backwardDir === 'NW')) ||
-    (direction === 'S' && (backwardDir === 'SE' || backwardDir === 'SW'));
-
-  if (wantsForward) {
-    const before = state.player.position;
-    state = movePlayer(state, forwardPos);
-    emitStateChanged();
-    if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
-      window.dispatchEvent(new CustomEvent('player-moved'));
-    }
-  } else if (wantsBackward) {
-    const before = state.player.position;
-    state = movePlayer(state, backwardPos);
-    emitStateChanged();
-    if (state.player.position.q !== before.q || state.player.position.r !== before.r) {
-      window.dispatchEvent(new CustomEvent('player-moved'));
-    }
+  setPlayerHeldDirection(direction);
+  if (!direction && !isAnimatingPlayer()) {
+    resetPlayerDrift();
   }
 }
 
@@ -161,9 +269,7 @@ function handleEndTurnKey(e) {
   }
   if (state.phase !== 'playerTurn') return;
   e.preventDefault();
-  state = endPlayerTurn(state);
-  state = runEnemyPhase(state);
-  emitStateChanged();
+  beginEnemyPhaseWithAnimation();
 }
 
 window.addEventListener('keydown', handleEndTurnKey);
@@ -178,9 +284,7 @@ window.addEventListener('card-played', (e) => {
 window.addEventListener('end-turn', () => {
   if (document.body.classList.contains('merchant-open')) return;
   if (state.phase !== 'playerTurn') return;
-  state = endPlayerTurn(state);
-  state = runEnemyPhase(state);
-  emitStateChanged();
+  beginEnemyPhaseWithAnimation();
 });
 
 window.addEventListener('crystal-sold', (e) => {

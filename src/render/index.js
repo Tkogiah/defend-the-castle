@@ -1,21 +1,48 @@
 /**
  * render/index.js - Public API for render module
- * Orchestrates frame rendering.
+ * Orchestrates frame rendering and animation.
  */
 
 import { drawGrid } from './grid.js';
 import { drawPlayer, drawEnemies } from './entities.js';
 import { getMovementRange, drawMovementRange, drawAttackRange } from './overlays.js';
 import { ISO_SCALE_Y } from '../config/index.js';
+import {
+  updateAnimations,
+  getPlayerVisualPosition,
+  getEnemyVisualPosition,
+  startPlayerAnimation,
+  startEnemyAnimations,
+  isAnimatingPlayer,
+  isAnimatingEnemies,
+  setPlayerHeldDirection,
+  setPlayerBoundaryCallback,
+  resetPlayerDrift,
+} from './animation.js';
+
+// Re-export animation API for main.js
+export {
+  startPlayerAnimation,
+  startEnemyAnimations,
+  isAnimatingPlayer,
+  isAnimatingEnemies,
+  setPlayerHeldDirection,
+  setPlayerBoundaryCallback,
+  resetPlayerDrift,
+};
 
 /**
  * Render a single frame to the canvas.
+ * Updates animations and draws all game elements with interpolated positions.
  * @param {CanvasRenderingContext2D} ctx
  * @param {HTMLCanvasElement} canvas
  * @param {Object} state - game state containing hexGrid and player
  * @param {{ panX: number, panY: number, zoom: number }} view - view state
  */
 export function renderFrame(ctx, canvas, state, view) {
+  // Update animations (uses internal time tracking)
+  updateAnimations();
+
   const rect = canvas.getBoundingClientRect();
   const cssWidth = rect.width;
   const cssHeight = rect.height;
@@ -46,9 +73,19 @@ export function renderFrame(ctx, canvas, state, view) {
     drawAttackRange(ctx, state.hexGrid, state.player.position, state.player.range);
   }
 
-  // Entities
-  drawEnemies(ctx, state.enemies);
-  drawPlayer(ctx, state.player.position);
+  // Entities with animated positions
+  const enemiesWithVisualPos = (state.enemies || []).map((enemy, index) => {
+    const visual = getEnemyVisualPosition(enemy.position, enemy.id ?? index);
+    return {
+      ...enemy,
+      visualPosition: { x: visual.x, y: visual.y },
+      isAnimating: visual.isAnimating,
+    };
+  });
+  drawEnemies(ctx, enemiesWithVisualPos);
+
+  const playerVisualPos = getPlayerVisualPosition(state.player.position);
+  drawPlayer(ctx, playerVisualPos);
 
   ctx.restore();
 }

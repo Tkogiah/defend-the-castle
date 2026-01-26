@@ -79,13 +79,14 @@ function screenToWorld(screenX, screenY, canvasWidth, canvasHeight, view) {
  * Compute hex direction from currently pressed WASD keys.
  * Returns null if no valid direction is active.
  *
- * Mapping (pointy-top hex grid):
+ * Mapping (pointy-top hex grid, 6 directions only):
  *   E:  d only
  *   W:  a only
  *   NE: w + d
  *   NW: w + a
  *   SE: s + d
  *   SW: s + a
+ *   W alone or S alone: no movement (null)
  *
  * @param {Set<string>} keys - currently pressed keys (lowercase)
  * @returns {'N'|'NE'|'E'|'SE'|'S'|'SW'|'W'|'NW'|null}
@@ -96,17 +97,19 @@ function computeDirection(keys) {
   const s = keys.has('s');
   const d = keys.has('d');
 
-  // Diagonals take priority when two keys are held
+  // Combos for diagonal hex directions
   if (w && d) return 'NE';
   if (w && a) return 'NW';
   if (s && d) return 'SE';
   if (s && a) return 'SW';
 
-  // Single-key cardinals (N/S are "either diagonal" intents)
-  if (w) return 'N';
-  if (s) return 'S';
-  if (d) return 'E';
-  if (a) return 'W';
+  // Single keys for E/W only (no W or S alone)
+  if (d && !w && !s) return 'E';
+  if (a && !w && !s) return 'W';
+
+  // W or S alone = vertical drift only
+  if (w && !a && !d) return 'N';
+  if (s && !a && !d) return 'S';
 
   return null;
 }
@@ -209,7 +212,12 @@ export function setupMovementControls(canvas, view, options) {
     if (mappedKey === 'w' || mappedKey === 'a' || mappedKey === 's' || mappedKey === 'd') {
       pressedKeys.delete(mappedKey);
       const direction = computeDirection(pressedKeys);
-      lastDirection = direction;
+      if (direction !== lastDirection && onMoveDirection) {
+        lastDirection = direction;
+        onMoveDirection(direction);
+      } else {
+        lastDirection = direction;
+      }
     }
   }
 

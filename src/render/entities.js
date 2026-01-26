@@ -15,12 +15,12 @@ const SHADOW_OFFSET_Y = 5;
 const SHADOW_ALPHA = 0.35;
 
 /**
- * Draw the player at the given position as a cylinder.
+ * Draw the player at the given pixel position as a cylinder.
  * @param {CanvasRenderingContext2D} ctx
- * @param {{ q: number, r: number }} position - axial coordinates
+ * @param {{ x: number, y: number }} pixelPos - pixel coordinates
  */
-export function drawPlayer(ctx, position) {
-  const { x, y } = axialToPixel(position.q, position.r, HEX_SIZE);
+export function drawPlayer(ctx, pixelPos) {
+  const { x, y } = pixelPos;
   const radius = HEX_SIZE * 0.35;
   const baseColor = '#d98a5f';
   const strokeColor = '#2b1a12';
@@ -30,17 +30,49 @@ export function drawPlayer(ctx, position) {
 
 /**
  * Draw enemies at their positions with HP bars.
+ * Supports animated positions via visualPosition property.
  * @param {CanvasRenderingContext2D} ctx
- * @param {Array<{ position: { q: number, r: number }, hp: number, maxHp: number }>} enemies
+ * @param {Array<{ position: { q: number, r: number }, visualPosition?: { x: number, y: number }, hp: number, maxHp: number }>} enemies
  */
 export function drawEnemies(ctx, enemies) {
   if (!Array.isArray(enemies)) return;
 
-  // Group enemies by hex, tracking first enemy for HP display
-  const buckets = new Map();
+  const animatingEnemies = [];
+  const staticEnemies = [];
+
   for (const enemy of enemies) {
+    if (enemy && enemy.isAnimating) {
+      animatingEnemies.push(enemy);
+    } else {
+      staticEnemies.push(enemy);
+    }
+  }
+
+  // Draw animating enemies individually (no bucketing to avoid ghost artifacts)
+  for (const enemy of animatingEnemies) {
     if (!enemy || !enemy.position) continue;
-    const key = `${enemy.position.q},${enemy.position.r}`;
+    const { x, y } = enemy.visualPosition
+      ? enemy.visualPosition
+      : axialToPixel(enemy.position.q, enemy.position.r, HEX_SIZE);
+    const radius = HEX_SIZE * 0.28;
+    const baseColor = '#c24b5a';
+    const strokeColor = '#2b0f14';
+    drawCylinder(ctx, x, y, radius, ENTITY_HEIGHT, baseColor, strokeColor);
+  }
+
+  // Group enemies by visual position for stacking display
+  // Use rounded pixel coords as key to handle floating point during animation
+  const buckets = new Map();
+  for (const enemy of staticEnemies) {
+    if (!enemy || !enemy.position) continue;
+
+    // Use visualPosition if provided, otherwise compute from logical position
+    const { x, y } = enemy.visualPosition
+      ? enemy.visualPosition
+      : axialToPixel(enemy.position.q, enemy.position.r, HEX_SIZE);
+
+    // Round to nearest pixel for bucketing (avoids float key issues)
+    const key = `${Math.round(x)},${Math.round(y)}`;
     const entry = buckets.get(key);
     if (entry) {
       entry.count += 1;
@@ -48,7 +80,8 @@ export function drawEnemies(ctx, enemies) {
       entry.totalMaxHp += enemy.maxHp;
     } else {
       buckets.set(key, {
-        position: enemy.position,
+        x,
+        y,
         count: 1,
         totalHp: enemy.hp,
         totalMaxHp: enemy.maxHp,
@@ -56,8 +89,7 @@ export function drawEnemies(ctx, enemies) {
     }
   }
 
-  for (const { position, count, totalHp, totalMaxHp } of buckets.values()) {
-    const { x, y } = axialToPixel(position.q, position.r, HEX_SIZE);
+  for (const { x, y, count, totalHp, totalMaxHp } of buckets.values()) {
     const radius = count > 1 ? HEX_SIZE * 0.36 : HEX_SIZE * 0.28;
     const baseColor = count > 1 ? '#d45163' : '#c24b5a';
     const strokeColor = '#2b0f14';
