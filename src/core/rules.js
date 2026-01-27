@@ -31,9 +31,16 @@ import {
   resetPlayerTurnBonus,
   setNextAttackFreezes,
   setEnemyFrozen,
+  addToInventory,
+  setPlayerEquipped,
+  removeFromInventory,
+  setGearUsedThisTurn,
+  resetGearUsedThisTurn,
+  getOwnedGearIds,
 } from './state.js';
-import { getSpiralLabel, getSpiralAxial, axialDistance } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial, axialDistance, getNeighbors } from '../hex/index.js';
 import { createCrystalCard, createMerchantCard } from '../data/cards.js';
+import { createGearInstance, getRandomGearDrop } from '../data/gear.js';
 
 // -----------------------------
 // Deck Operations
@@ -85,6 +92,7 @@ export function startPlayerTurn(state) {
   newState = setPlayerAttackPoints(newState, 0);
   newState = setPlayerMovementPoints(newState, 0);
   newState = resetPlayerTurnBonus(newState); // Reset turn-scoped bonuses
+  newState = resetGearUsedThisTurn(newState); // Reset gear abilities
   newState = drawCards(newState, 5);
   return newState;
 }
@@ -122,8 +130,8 @@ export function advanceToPlayerTurn(state) {
 // -----------------------------
 
 export function checkWinCondition(state) {
-  // Win: boss defeated
-  if (state.wave.bossDefeated) {
+  // Win: wave 10 boss defeated
+  if (state.wave.current === 10 && state.wave.bossDefeated) {
     return setOutcome(state, 'win');
   }
   return state;
@@ -167,12 +175,8 @@ export function playActionCard(state, cardId, choice) {
       newState.player.attackPoints + value
     );
   } else {
-    // Apply turn bonus to base movement
-    const baseSpeed = Number.isFinite(newState.player.baseMovement)
-      ? newState.player.baseMovement
-      : 0;
-    const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
-    const totalSpeed = baseSpeed + bonusSpeed;
+    // Apply gear and turn bonus to movement
+    const totalSpeed = getEffectiveSpeed(newState);
     newState = setPlayerMovementPoints(
       newState,
       newState.player.movementPoints + value * totalSpeed
@@ -204,11 +208,7 @@ export function playMerchantCard(state, cardId) {
       // Gain 1 attack and 1 movement point
       newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 1);
       {
-        const baseSpeed = Number.isFinite(newState.player.baseMovement)
-          ? newState.player.baseMovement
-          : 0;
-        const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
-        const totalSpeed = baseSpeed + bonusSpeed;
+        const totalSpeed = getEffectiveSpeed(newState);
         newState = setPlayerMovementPoints(
           newState,
           newState.player.movementPoints + totalSpeed
@@ -249,13 +249,9 @@ export function playMerchantCard(state, cardId) {
       break;
 
     case 'move_twice':
-      // +2 movement points (flat, not multiplied)
+      // +2 movement actions (speed * 2)
       {
-        const baseSpeed = Number.isFinite(newState.player.baseMovement)
-          ? newState.player.baseMovement
-          : 0;
-        const bonusSpeed = newState.player.turnBonus?.baseMovement || 0;
-        const totalSpeed = baseSpeed + bonusSpeed;
+        const totalSpeed = getEffectiveSpeed(newState);
         newState = setPlayerMovementPoints(
           newState,
           newState.player.movementPoints + totalSpeed * 2
@@ -319,10 +315,8 @@ export function attackEnemy(state, enemyId) {
   const enemy = state.enemies.find((e) => e.id === enemyId);
   if (!enemy) return state;
 
-  // Apply turn bonus to base damage
-  const baseDamage = state.player.baseDamage;
-  const bonusDamage = state.player.turnBonus?.baseDamage || 0;
-  const totalDamage = baseDamage + bonusDamage;
+  // Calculate effective damage (base + turn bonus + gear)
+  const totalDamage = getEffectiveDamage(state);
 
   let newState = damageEnemy(state, enemyId, totalDamage);
 
@@ -332,12 +326,20 @@ export function attackEnemy(state, enemyId) {
     newState = setNextAttackFreezes(newState, false);
   }
 
-  // Award crystal card on attack based on player's ring distance from center
+  // Award crystal or gold based on King's Purse gear
   const { q, r } = state.player.position;
   const ring = getHexRing(state, q, r);
-  const crystalCard = createCrystalCard(ring);
-  if (crystalCard) {
-    newState = addCardToDiscard(newState, crystalCard);
+  if (hasEquippedGear(state, 'kings_purse')) {
+    // King's Purse: gain gold immediately instead of crystal card
+    if (ring > 0) {
+      newState = addPlayerGold(newState, ring);
+    }
+  } else {
+    // Normal: award crystal card
+    const crystalCard = createCrystalCard(ring);
+    if (crystalCard) {
+      newState = addCardToDiscard(newState, crystalCard);
+    }
   }
 
   // Check if enemy defeated
@@ -348,7 +350,7 @@ export function attackEnemy(state, enemyId) {
 
     // Check if boss was defeated
     if (enemy.isBoss) {
-      newState = updateWave(newState, { bossDefeated: true });
+      newState = onBossDefeated(newState);
     }
   }
 
@@ -455,26 +457,45 @@ export function buyMerchantCard(state, cardType) {
 // -----------------------------
 
 /**
- * Spawn enemies at the outer edge (spiral label 90).
+ * Get basic enemy HP for a given wave number.
+ * @param {number} waveNumber - wave number (1-10)
+ * @returns {number} HP value
+ */
+export function getBasicEnemyHP(waveNumber) {
+  return waveNumber * 10; // 10, 20, 30... 100
+}
+
+/**
+ * Get boss HP for a given wave number.
+ * @param {number} waveNumber - wave number (1-10)
+ * @returns {number} HP value
+ */
+export function getBossHP(waveNumber) {
+  return waveNumber * 100; // 100, 200... 1000
+}
+
+/**
+ * Spawn basic enemies for current wave at the outer edge (spiral label 90).
  * @param {Object} state - current game state
- * @param {number} count - number of enemies to spawn
  * @returns {Object} new state with spawned enemies
  */
-export function spawnEnemies(state, count) {
+export function spawnWaveEnemies(state) {
   const spawnLabel = 90; // Outer edge of spiral
   const spawnPos = getSpiralAxial(spawnLabel);
   if (!spawnPos) return state;
 
+  const count = state.wave.enemiesPerWave;
+  const hp = getBasicEnemyHP(state.wave.current);
   let newState = state;
 
   for (let i = 0; i < count; i++) {
     const enemy = {
       id: `enemy-${Date.now()}-${i}`,
       position: { q: spawnPos.q, r: spawnPos.r },
-      hp: 10,
-      maxHp: 10,
+      hp,
+      maxHp: hp,
       isBoss: false,
-      frozenTurns: 0, // Tracks freeze effect from Ice card
+      frozenTurns: 0,
     };
     newState = {
       ...newState,
@@ -491,8 +512,45 @@ export function spawnEnemies(state, count) {
 }
 
 /**
+ * Spawn boss for current wave at the outer edge.
+ * @param {Object} state - current game state
+ * @returns {Object} new state with spawned boss
+ */
+export function spawnBoss(state) {
+  if (state.wave.bossSpawned) return state;
+
+  const spawnLabel = 90;
+  const spawnPos = getSpiralAxial(spawnLabel);
+  if (!spawnPos) return state;
+
+  const hp = getBossHP(state.wave.current);
+  const boss = {
+    id: `boss-${state.wave.current}-${Date.now()}`,
+    position: { q: spawnPos.q, r: spawnPos.r },
+    hp,
+    maxHp: hp,
+    isBoss: true,
+    frozenTurns: 0,
+  };
+
+  let newState = {
+    ...state,
+    enemies: [...state.enemies, boss],
+  };
+  newState = updateWave(newState, { bossSpawned: true });
+
+  return newState;
+}
+
+// Legacy alias for compatibility
+export function spawnEnemies(state, count) {
+  return spawnWaveEnemies(state);
+}
+
+/**
  * Move all enemies along the spiral path toward center.
- * Each enemy moves 1-10 random steps (counter-clockwise, decreasing label).
+ * Basic enemies: 1-10 random steps.
+ * Boss: 1-20 random steps, skips occupied hexes.
  * Frozen enemies skip movement and have their freeze counter decremented.
  * @param {Object} state - current game state
  * @returns {Object} new state with updated enemy positions
@@ -500,10 +558,13 @@ export function spawnEnemies(state, count) {
 export function moveEnemies(state) {
   let newState = state;
 
-  for (const enemy of state.enemies) {
+  // Move basic enemies first, then boss
+  const basicEnemies = state.enemies.filter((e) => !e.isBoss);
+  const bosses = state.enemies.filter((e) => e.isBoss);
+
+  for (const enemy of basicEnemies) {
     // Handle frozen enemies
     if (enemy.frozenTurns > 0) {
-      // Decrement freeze counter, skip movement
       newState = setEnemyFrozen(newState, enemy.id, enemy.frozenTurns - 1);
       continue;
     }
@@ -518,6 +579,38 @@ export function moveEnemies(state) {
     const newPos = getSpiralAxial(newLabel);
     if (newPos) {
       newState = setEnemyPosition(newState, enemy.id, newPos);
+    }
+  }
+
+  // Move boss with collision handling
+  for (const boss of bosses) {
+    if (boss.frozenTurns > 0) {
+      newState = setEnemyFrozen(newState, boss.id, boss.frozenTurns - 1);
+      continue;
+    }
+
+    const currentLabel = getSpiralLabel(boss.position.q, boss.position.r);
+    if (currentLabel === null) continue;
+
+    // Boss moves 1-20 steps
+    const steps = Math.floor(Math.random() * 20) + 1;
+    let targetLabel = Math.max(0, currentLabel - steps);
+
+    // Find empty hex (skip occupied hexes, keep moving forward)
+    const occupiedLabels = new Set(
+      newState.enemies
+        .filter((e) => e.id !== boss.id)
+        .map((e) => getSpiralLabel(e.position.q, e.position.r))
+        .filter((l) => l !== null)
+    );
+
+    while (targetLabel > 0 && occupiedLabels.has(targetLabel)) {
+      targetLabel--;
+    }
+
+    const newPos = getSpiralAxial(targetLabel);
+    if (newPos) {
+      newState = setEnemyPosition(newState, boss.id, newPos);
     }
   }
 
@@ -540,9 +633,19 @@ export function checkPlayerKnockout(state) {
 export function runEnemyPhase(state) {
   let newState = state;
 
-  // Spawn enemies on first enemy turn (once per game)
+  // Check if boss just died - grant extra player turn
+  if (newState.wave.bossJustDied) {
+    newState = updateWave(newState, { bossJustDied: false });
+    return advanceToPlayerTurn(newState);
+  }
+
+  // Spawn basic enemies on first enemy turn of each wave
   if (newState.wave.enemiesSpawned === 0) {
-    newState = spawnEnemies(newState, 10);
+    newState = spawnWaveEnemies(newState);
+  }
+  // Spawn boss the turn after basic enemies spawn (if not already spawned)
+  else if (!newState.wave.bossSpawned) {
+    newState = spawnBoss(newState);
   }
 
   newState = moveEnemies(newState);
@@ -550,4 +653,270 @@ export function runEnemyPhase(state) {
   newState = endEnemyTurn(newState);
   if (newState.outcome) return newState;
   return advanceToPlayerTurn(newState);
+}
+
+// -----------------------------
+// Boss Death & Wave Progression
+// -----------------------------
+
+/**
+ * Handle boss death effects:
+ * 1. All enemies lose 50% HP
+ * 2. Drop gear (waves 1-9 only)
+ * 3. Mark for extra player turn
+ * 4. Advance wave and spawn next (if not wave 10)
+ * @param {Object} state - current game state
+ * @returns {Object} new state with boss death effects applied
+ */
+export function onBossDefeated(state) {
+  let newState = updateWave(state, { bossDefeated: true });
+
+  // 1. All remaining enemies lose 50% HP
+  for (const enemy of newState.enemies) {
+    const damage = Math.floor(enemy.hp / 2);
+    newState = damageEnemy(newState, enemy.id, damage);
+  }
+
+  // Remove enemies with 0 HP
+  newState = {
+    ...newState,
+    enemies: newState.enemies.filter((e) => e.hp > 0),
+  };
+
+  // 2. Drop gear (waves 1-9 only, wave 10 boss grants victory with no gear)
+  if (state.wave.current < 10) {
+    newState = dropBossGear(newState);
+  }
+
+  // 3. Mark for extra player turn
+  newState = updateWave(newState, { bossJustDied: true });
+
+  // 4. Advance wave and spawn next (if not wave 10)
+  if (state.wave.current < 10) {
+    newState = advanceWave(newState);
+    newState = spawnWaveEnemies(newState);
+  }
+
+  return newState;
+}
+
+/**
+ * Advance to next wave, resetting wave-specific trackers.
+ * @param {Object} state - current game state
+ * @returns {Object} new state with wave advanced
+ */
+export function advanceWave(state) {
+  return updateWave(state, {
+    current: state.wave.current + 1,
+    enemiesSpawned: 0,
+    bossSpawned: false,
+    bossDefeated: false,
+  });
+}
+
+/**
+ * Drop gear from boss with non-duplicate preference.
+ * @param {Object} state - current game state
+ * @returns {Object} new state with gear added to inventory
+ */
+export function dropBossGear(state) {
+  const ownedIds = getOwnedGearIds(state);
+  const dropId = getRandomGearDrop(ownedIds);
+  const gear = createGearInstance(dropId);
+  if (!gear) return state;
+  return addToInventory(state, gear);
+}
+
+// -----------------------------
+// Gear Helpers
+// -----------------------------
+
+/**
+ * Check if player has a specific gear equipped.
+ * @param {Object} state - current game state
+ * @param {string} gearId - base gear ID (e.g., 'dragon')
+ * @returns {boolean}
+ */
+export function hasEquippedGear(state, gearId) {
+  for (const gear of Object.values(state.player.equipped)) {
+    if (gear && gear.id === gearId) return true;
+  }
+  return false;
+}
+
+/**
+ * Get effective damage (base + turn bonus + gear).
+ * Power Glove doubles base damage.
+ * @param {Object} state - current game state
+ * @returns {number} total damage
+ */
+export function getEffectiveDamage(state) {
+  let baseDamage = state.player.baseDamage;
+  const bonusDamage = state.player.turnBonus?.baseDamage || 0;
+
+  // Power Glove doubles base damage
+  if (hasEquippedGear(state, 'power_glove')) {
+    baseDamage *= 2;
+  }
+
+  return baseDamage + bonusDamage;
+}
+
+/**
+ * Get effective speed (base + turn bonus + gear).
+ * Boots of Speed doubles base speed.
+ * @param {Object} state - current game state
+ * @returns {number} total speed
+ */
+export function getEffectiveSpeed(state) {
+  let baseSpeed = state.player.baseMovement;
+  const bonusSpeed = state.player.turnBonus?.baseMovement || 0;
+
+  // Boots of Speed doubles base speed
+  if (hasEquippedGear(state, 'boots_of_speed')) {
+    baseSpeed *= 2;
+  }
+
+  return baseSpeed + bonusSpeed;
+}
+
+// -----------------------------
+// Gear Abilities
+// -----------------------------
+
+/**
+ * Use Dragon gear ability: move to any adjacent hex (ignores spiral path).
+ * Can be used once per turn, even with 0 movement points.
+ * @param {Object} state - current game state
+ * @param {{ q: number, r: number }} targetHex - target adjacent hex
+ * @returns {Object} new state (unchanged if invalid)
+ */
+export function useAdjacentMove(state, targetHex) {
+  // Must have Dragon equipped
+  if (!hasEquippedGear(state, 'dragon')) return state;
+
+  // Must not have used this turn
+  if (state.player.gearUsedThisTurn.dragon) return state;
+
+  // Target must be adjacent to current position
+  const { q, r } = state.player.position;
+  const neighbors = getNeighbors(q, r);
+  const isAdjacent = neighbors.some(
+    (n) => n.q === targetHex.q && n.r === targetHex.r
+  );
+  if (!isAdjacent) return state;
+
+  // Target must be valid hex
+  const key = `${targetHex.q},${targetHex.r}`;
+  if (!state.hexGrid.has(key)) return state;
+
+  // Target must not have enemy
+  const enemyAtTarget = state.enemies.some(
+    (e) => e.position.q === targetHex.q && e.position.r === targetHex.r
+  );
+  if (enemyAtTarget) return state;
+
+  let newState = setPlayerPosition(state, targetHex);
+  newState = setGearUsedThisTurn(newState, 'dragon', true);
+  return newState;
+}
+
+/**
+ * Use Fireball gear ability: 10 damage to all enemies within range 3 of target hex.
+ * Can target any hex on the board, once per turn.
+ * @param {Object} state - current game state
+ * @param {{ q: number, r: number }} centerHex - center of AOE
+ * @returns {Object} new state (unchanged if invalid)
+ */
+export function useFireball(state, centerHex) {
+  // Must have Fireball equipped
+  if (!hasEquippedGear(state, 'fireball')) return state;
+
+  // Must not have used this turn
+  if (state.player.gearUsedThisTurn.fireball) return state;
+
+  // Target must be valid hex
+  const key = `${centerHex.q},${centerHex.r}`;
+  if (!state.hexGrid.has(key)) return state;
+
+  let newState = state;
+  const FIREBALL_DAMAGE = 10;
+  const FIREBALL_RANGE = 3;
+
+  // Damage all enemies within range 3 of center
+  for (const enemy of state.enemies) {
+    const distance = axialDistance(
+      centerHex.q,
+      centerHex.r,
+      enemy.position.q,
+      enemy.position.r
+    );
+    if (distance <= FIREBALL_RANGE) {
+      newState = damageEnemy(newState, enemy.id, FIREBALL_DAMAGE);
+
+      // Check if enemy defeated
+      const updatedEnemy = newState.enemies.find((e) => e.id === enemy.id);
+      if (updatedEnemy && updatedEnemy.hp <= 0) {
+        newState = removeEnemy(newState, enemy.id);
+        newState = incrementEnemiesDefeated(newState);
+
+        // Check if boss was defeated
+        if (enemy.isBoss) {
+          newState = onBossDefeated(newState);
+        }
+      }
+    }
+  }
+
+  newState = setGearUsedThisTurn(newState, 'fireball', true);
+  return newState;
+}
+
+// -----------------------------
+// Gear Equip/Unequip
+// -----------------------------
+
+/**
+ * Equip gear from inventory to slot.
+ * If slot is occupied, swaps with inventory.
+ * @param {Object} state - current game state
+ * @param {string} instanceId - gear instance ID to equip
+ * @returns {Object} new state
+ */
+export function equipGear(state, instanceId) {
+  const gear = state.player.inventory.find((g) => g.instanceId === instanceId);
+  if (!gear) return state;
+
+  const slot = gear.type;
+  const currentlyEquipped = state.player.equipped[slot];
+
+  // Remove from inventory
+  let newState = removeFromInventory(state, instanceId);
+
+  // If slot occupied, add old gear to inventory
+  if (currentlyEquipped) {
+    newState = addToInventory(newState, currentlyEquipped);
+  }
+
+  // Equip new gear
+  newState = setPlayerEquipped(newState, slot, gear);
+  return newState;
+}
+
+/**
+ * Unequip gear from slot to inventory.
+ * @param {Object} state - current game state
+ * @param {string} slot - slot to unequip (head, body, hand, foot, mount)
+ * @returns {Object} new state
+ */
+export function unequipGear(state, slot) {
+  const gear = state.player.equipped[slot];
+  if (!gear) return state;
+
+  // Check inventory space (max 10)
+  if (state.player.inventory.length >= 10) return state;
+
+  let newState = setPlayerEquipped(state, slot, null);
+  newState = addToInventory(newState, gear);
+  return newState;
 }

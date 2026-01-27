@@ -92,6 +92,40 @@ export function drawAttackRange(ctx, hexGrid, playerPos, range) {
 }
 
 /**
+ * Draw fireball targeting overlay (red outline on hexes within range).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Map} hexGrid - the hex grid
+ * @param {{ q: number, r: number }} centerPos - hover hex
+ * @param {number} range - fireball range
+ */
+export function drawFireballRange(ctx, hexGrid, centerPos, range) {
+  const hexesInRange = getHexesInRange(hexGrid, centerPos.q, centerPos.r, range);
+
+  ctx.strokeStyle = 'rgba(220, 60, 60, 0.7)'; // Fireball red
+  ctx.lineWidth = 2;
+
+  for (const hex of hexesInRange) {
+    const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
+    drawHexOutline(ctx, x, y, HEX_SIZE);
+  }
+}
+
+/**
+ * Debug: draw a small dot at the hover center.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{ q: number, r: number }} centerPos
+ */
+export function drawFireballDebugDot(ctx, centerPos) {
+  const { x, y } = axialToPixel(centerPos.q, centerPos.r, HEX_SIZE);
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 60, 60, 0.95)';
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
  * Draw a filled hex at the given pixel coordinates.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x - center x

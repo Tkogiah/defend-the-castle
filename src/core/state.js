@@ -15,26 +15,33 @@ import {
   MERCHANT_CARDS,
   SHOP_PILE_SIZE,
 } from '../data/cards.js';
+import { createGearInstance, getRandomGearDrop } from '../data/gear.js';
 
 // -----------------------------
 // Initial State Shape (MVP)
 // -----------------------------
 
 export function createInitialState(hexGrid = new Map()) {
+  // Generate random starting gear (non-duplicate logic with empty owned list)
+  const startingGearId = getRandomGearDrop([]);
+  const startingGear = createGearInstance(startingGearId);
+
   return {
     // 'setup' | 'playerTurn' | 'enemyTurn' | 'gameOver'
     phase: 'setup',
 
     turnNumber: 0,
 
-    // Wave: MVP = 1 wave, 10 basic enemies + 1 boss
+    // Wave: 10 waves, 10 basic enemies + 1 boss per wave
     wave: {
       current: 1,
+      totalWaves: 10,
       enemiesSpawned: 0,
       enemiesDefeated: 0,
-      totalEnemies: 10,
+      enemiesPerWave: 10,
       bossSpawned: false,
       bossDefeated: false,
+      bossJustDied: false, // Triggers extra player turn
     },
 
     // Player (MVP: Warrior with Sword)
@@ -46,8 +53,23 @@ export function createInitialState(hexGrid = new Map()) {
       range: 2,
       attackPoints: 0,
       gold: 100,
-      gear: null, // single gear slot for MVP
       isKnockedOut: false,
+
+      // Gear system: 5 equipped slots + 10 inventory
+      equipped: {
+        head: null,
+        body: null,
+        hand: null,
+        foot: null,
+        mount: null,
+      },
+      inventory: startingGear ? [startingGear] : [], // Max 10 items
+
+      // Per-turn gear ability tracking
+      gearUsedThisTurn: {
+        dragon: false,   // Adjacent move used
+        fireball: false, // AOE attack used
+      },
 
       // Turn-scoped bonuses (reset at start of each turn)
       turnBonus: {
@@ -270,4 +292,73 @@ export function decrementShopPile(state, cardType) {
 
 export function setOutcome(state, outcome, loseReason = null) {
   return { ...state, outcome, loseReason };
+}
+
+// Gear
+
+export function setPlayerEquipped(state, slot, gear) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      equipped: { ...state.player.equipped, [slot]: gear },
+    },
+  };
+}
+
+export function addToInventory(state, gear) {
+  if (state.player.inventory.length >= 10) return state; // Max 10 items
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      inventory: [...state.player.inventory, gear],
+    },
+  };
+}
+
+export function removeFromInventory(state, instanceId) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      inventory: state.player.inventory.filter((g) => g.instanceId !== instanceId),
+    },
+  };
+}
+
+export function setGearUsedThisTurn(state, gearId, used) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      gearUsedThisTurn: { ...state.player.gearUsedThisTurn, [gearId]: used },
+    },
+  };
+}
+
+export function resetGearUsedThisTurn(state) {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      gearUsedThisTurn: { dragon: false, fireball: false },
+    },
+  };
+}
+
+/**
+ * Get all owned gear IDs (equipped + inventory).
+ * @param {Object} state - current game state
+ * @returns {string[]} Array of gear IDs (base IDs, not instance IDs)
+ */
+export function getOwnedGearIds(state) {
+  const ids = [];
+  for (const slot of Object.values(state.player.equipped)) {
+    if (slot) ids.push(slot.id);
+  }
+  for (const gear of state.player.inventory) {
+    ids.push(gear.id);
+  }
+  return ids;
 }

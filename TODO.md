@@ -3,19 +3,16 @@
 Short, actionable items only. Keep high-level items at top; break down later.
 
 ## Now
-- Define MVP architecture and module responsibilities.
-- Create core data definitions (cards, gear, enemies, shop).
-- Draft render and input flow for the MVP loop.
-- Remove temporary Enter key end-turn shortcut after UI button exists.
-- Remove temporary auto-reset of movementPoints to 10 (testing only).
+- Fix fireball hover targeting (if still broken).
+- Resolve click-to-move ghost/phantom frame at end of animation.
+- Agree on module cleanup order after Claude's module-map review.
 
 ## Next
-- Build hex grid generation and coordinate conversions.
-- Implement basic turn progression (player -> enemies -> check win/lose).
 - Define a git branching plan for video capture/documentation workflow before integrating updates.
 - Test touch drag-to-move on mobile and map drag direction to the 6 path directions.
-- Fix click-to-move ghost/phantom frame at end of animation.
 - Add merchant card detail view (tap to read effect before buy), mobile-first.
+- Review MODULE_ALIGNMENT_AUDIT.md after Claude's module map feedback.
+- Use MODULE_CLEANUP_TASKS.md to schedule module-by-module cleanup.
 
 ## Later
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.
@@ -30,3 +27,10 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Add stealth mode to allow moving past enemies via gear (post-MVP).
 - Enable player-to-player gear trading when sharing a hex (post-MVP).
 - Add sweep attack (post-MVP): allow damage spread across enemies in one adjacent hex if weapon damage >= enemy count; remainder discarded.
+
+## Done (TODID)
+2026-01-27
+- Defined module boundaries in MODULE_MAP.md.
+- Audited module alignment in MODULE_ALIGNMENT_AUDIT.md.
+- Created module cleanup plan in MODULE_CLEANUP_TASKS.md.
+- Added UI module docs/entrypoint (src/ui/context.md, src/ui/index.js).

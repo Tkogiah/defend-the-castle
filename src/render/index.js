@@ -5,7 +5,13 @@
 
 import { drawGrid } from './grid.js';
 import { drawPlayer, drawEnemies } from './entities.js';
-import { getMovementRange, drawMovementRange, drawAttackRange } from './overlays.js';
+import {
+  getMovementRange,
+  drawMovementRange,
+  drawAttackRange,
+  drawFireballRange,
+  drawFireballDebugDot,
+} from './overlays.js';
 import { ISO_SCALE_Y } from '../config/index.js';
 import {
   updateAnimations,
@@ -39,7 +45,7 @@ export {
  * @param {Object} state - game state containing hexGrid and player
  * @param {{ panX: number, panY: number, zoom: number }} view - view state
  */
-export function renderFrame(ctx, canvas, state, view) {
+export function renderFrame(ctx, canvas, state, view, overlay = null) {
   // Update animations (uses internal time tracking)
   updateAnimations();
 
@@ -71,6 +77,12 @@ export function renderFrame(ctx, canvas, state, view) {
   // Attack range overlay (green outlines)
   if (state.player.attackPoints > 0) {
     drawAttackRange(ctx, state.hexGrid, state.player.position, state.player.range);
+  }
+
+  // Fireball targeting overlay (red dashed outlines)
+  if (overlay?.fireball?.centerHex) {
+    drawFireballRange(ctx, state.hexGrid, overlay.fireball.centerHex, 3);
+    drawFireballDebugDot(ctx, overlay.fireball.centerHex);
   }
 
   // Entities with animated positions

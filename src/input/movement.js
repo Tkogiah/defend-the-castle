@@ -75,6 +75,16 @@ function screenToWorld(screenX, screenY, canvasWidth, canvasHeight, view) {
   return { x: worldX, y: worldY };
 }
 
+function getPointerClientXY(e) {
+  if (e.touches && e.touches[0]) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  if (e.changedTouches && e.changedTouches[0]) {
+    return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
 /**
  * Compute hex direction from currently pressed WASD keys.
  * Returns null if no valid direction is active.
@@ -115,6 +125,24 @@ function computeDirection(keys) {
 }
 
 /**
+ * Convert screen coordinates to hex coordinates.
+ * Exported for external use (e.g., fireball targeting).
+ * @param {number} screenX - x in CSS pixels relative to canvas
+ * @param {number} screenY - y in CSS pixels relative to canvas
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ panX: number, panY: number, zoom: number }} view
+ * @param {number} [hexSize=HEX_SIZE]
+ * @returns {{ q: number, r: number }}
+ */
+export function screenToHex(screenX, screenY, canvas, view, hexSize = HEX_SIZE) {
+  const rect = canvas.getBoundingClientRect();
+  const cssWidth = rect.width;
+  const cssHeight = rect.height;
+  const world = screenToWorld(screenX, screenY, cssWidth, cssHeight, view);
+  return pixelToAxial(world.x, world.y, hexSize);
+}
+
+/**
  * Set up movement input controls.
  * Returns a cleanup function to remove all event listeners.
  *
@@ -125,6 +153,7 @@ function computeDirection(keys) {
  * @param {number} [options.boardRadius=BOARD_RADIUS] - board radius for bounds filtering
  * @param {function({ q: number, r: number }): void} [options.onMoveToHex] - click-to-move callback
  * @param {function('N'|'NE'|'E'|'SE'|'S'|'SW'|'W'|'NW'): void} [options.onMoveDirection] - keyboard direction callback
+ * @param {function({ q: number, r: number } | null): void} [options.onHoverHex] - hover callback (fires on mouse move)
  * @param {function(): boolean} options.hasMoved - function to check if camera has moved (for click detection)
  * @returns {function(): void} cleanup function to remove listeners
  */
@@ -134,6 +163,8 @@ export function setupMovementControls(canvas, view, options) {
     boardRadius = BOARD_RADIUS,
     onMoveToHex,
     onMoveDirection,
+    onHoverHex,
+    onClickOutsideBoard,
     hasMoved,
   } = options;
 
@@ -164,9 +195,83 @@ export function setupMovementControls(canvas, view, options) {
     const world = screenToWorld(screenX, screenY, cssWidth, cssHeight, view);
     const axial = pixelToAxial(world.x, world.y, hexSize);
 
-    // Input-layer bounds filtering: ignore clicks outside the board
+    // Input-layer bounds filtering
     if (axialDistanceToCenter(axial.q, axial.r) <= boardRadius) {
       onMoveToHex(axial);
+    } else if (onClickOutsideBoard) {
+      onClickOutsideBoard();
+    }
+  }
+
+  // --- Hover handler ---
+
+  // Track last emitted hover to avoid redundant calls
+  let lastHoverKey = '';
+
+  function emitHover(hex) {
+    const key = hex ? `${hex.q},${hex.r}` : '';
+    if (key !== lastHoverKey) {
+      lastHoverKey = key;
+      onHoverHex(hex);
+    }
+  }
+
+  function onPointerMove(e) {
+    if (!onHoverHex) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const { x, y } = getPointerClientXY(e);
+    const screenX = x - rect.left;
+    const screenY = y - rect.top;
+    const cssWidth = rect.width;
+    const cssHeight = rect.height;
+
+    // Ignore moves outside the canvas bounds
+    if (screenX < 0 || screenY < 0 || screenX > cssWidth || screenY > cssHeight) {
+      emitHover(null);
+      return;
+    }
+
+    const world = screenToWorld(screenX, screenY, cssWidth, cssHeight, view);
+    const axial = pixelToAxial(world.x, world.y, hexSize);
+
+    // Only emit if within board bounds
+    if (axialDistanceToCenter(axial.q, axial.r) <= boardRadius) {
+      emitHover(axial);
+    } else {
+      emitHover(null);
+    }
+  }
+
+  // Dedicated handler for window-level mousemove to ensure hover always updates
+  function onWindowMouseMove(e) {
+    if (!onHoverHex) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    const cssWidth = rect.width;
+    const cssHeight = rect.height;
+
+    // Only process if mouse is over the canvas
+    if (screenX < 0 || screenY < 0 || screenX > cssWidth || screenY > cssHeight) {
+      emitHover(null);
+      return;
+    }
+
+    const world = screenToWorld(screenX, screenY, cssWidth, cssHeight, view);
+    const axial = pixelToAxial(world.x, world.y, hexSize);
+
+    if (axialDistanceToCenter(axial.q, axial.r) <= boardRadius) {
+      emitHover(axial);
+    } else {
+      emitHover(null);
+    }
+  }
+
+  function onPointerLeave() {
+    if (onHoverHex) {
+      emitHover(null);
     }
   }
 
@@ -232,6 +337,16 @@ export function setupMovementControls(canvas, view, options) {
     window.addEventListener('keyup', onKeyUp);
   }
 
+  if (onHoverHex) {
+    // Canvas-level listeners for direct interaction
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('mousemove', onPointerMove);
+    canvas.addEventListener('touchmove', onPointerMove, { passive: true });
+    canvas.addEventListener('pointerleave', onPointerLeave);
+    // Window-level listener as fallback (ensures hover works before any canvas interaction)
+    window.addEventListener('mousemove', onWindowMouseMove);
+  }
+
   // --- Cleanup function ---
 
   return function cleanup() {
@@ -241,6 +356,13 @@ export function setupMovementControls(canvas, view, options) {
     if (onMoveDirection) {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+    }
+    if (onHoverHex) {
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('mousemove', onPointerMove);
+      canvas.removeEventListener('touchmove', onPointerMove);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
+      window.removeEventListener('mousemove', onWindowMouseMove);
     }
   };
 }

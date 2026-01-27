@@ -19,6 +19,7 @@ const characterSheet = document.getElementById('character-sheet');
 const btnCharacter = document.getElementById('btn-character');
 const btnCloseSheet = document.getElementById('btn-close-sheet');
 const btnEndTurn = document.getElementById('btn-end-turn');
+const btnFireball = document.getElementById('btn-fireball');
 const handCards = document.getElementById('hand-cards');
 const dropZone = document.getElementById('play-card-zone');
 const dropZoneTitle = dropZone?.querySelector('.drop-zone-title');
@@ -36,6 +37,10 @@ const merchantGoldDisplay = document.getElementById('merchant-gold-value');
 const merchantGrid = document.getElementById('merchant-grid');
 const btnMerchant = document.getElementById('btn-merchant');
 const btnCloseMerchant = document.getElementById('btn-close-merchant');
+
+// Gear elements
+const gearSlotsContainer = document.getElementById('gear-slots');
+const inventoryList = document.getElementById('inventory-list');
 
 // -----------------------------
 // State
@@ -65,10 +70,12 @@ function closeHandDrawer() {
   cardDetail.classList.add('hidden');
   if (dropZoneTitle) dropZoneTitle.textContent = '';
   if (dropZoneDesc) dropZoneDesc.textContent = '';
+  updateAbilityButtonsVisibility();
 }
 
 function openHandDrawer() {
   drawer.classList.remove('collapsed');
+  updateAbilityButtonsVisibility();
 }
 
 function closeCharacterSheet() {
@@ -77,12 +84,14 @@ function closeCharacterSheet() {
   }
   characterSheet.classList.add('hidden');
   document.body.classList.remove('sheet-open');
+  updateAbilityButtonsVisibility();
 }
 
 function openCharacterSheet() {
   uiBackdrop?.classList.remove('hidden');
   characterSheet.classList.remove('hidden');
   document.body.classList.add('sheet-open');
+  updateAbilityButtonsVisibility();
 }
 
 btnHand?.addEventListener('click', () => {
@@ -459,6 +468,10 @@ uiBackdrop?.addEventListener('click', () => {
   closeCharacterSheet();
 });
 
+btnFireball?.addEventListener('click', () => {
+  window.dispatchEvent(new CustomEvent('fireball-toggle'));
+});
+
 // -----------------------------
 // Merchant Panel
 // -----------------------------
@@ -474,6 +487,7 @@ function openMerchant() {
   merchantPanel?.classList.remove('hidden');
   document.body.classList.add('merchant-open');
   btnEndTurn?.classList.add('disabled');
+  updateAbilityButtonsVisibility();
 }
 
 function closeMerchant() {
@@ -484,6 +498,7 @@ function closeMerchant() {
   document.body.classList.remove('merchant-open');
   btnEndTurn?.classList.remove('disabled');
   closeHandDrawer();
+  updateAbilityButtonsVisibility();
   if (currentPlayerRing === 0) {
     btnMerchant?.classList.remove('hidden');
   }
@@ -498,6 +513,14 @@ function closeAllPanels() {
     selectedCard.classList.remove('selected');
     selectedCard = null;
   }
+}
+
+function updateAbilityButtonsVisibility() {
+  if (!btnFireball) return;
+  const drawerOpen = !drawer.classList.contains('collapsed');
+  const sheetOpen = !characterSheet.classList.contains('hidden');
+  const hide = drawerOpen || sheetOpen || merchantOpen;
+  btnFireball.classList.toggle('hidden', hide);
 }
 
 function updateMerchantVisibility(playerRing) {
@@ -683,6 +706,21 @@ window.addEventListener('state-changed', (e) => {
     currentShopPiles = state.shop.piles;
     renderMerchantSlots(currentShopPiles);
   }
+
+  // Render gear slots and inventory
+  if (state.player.equipped) {
+    renderGearSlots(state.player.equipped);
+  }
+  if (state.player.inventory) {
+    renderInventory(state.player.inventory);
+  }
+});
+
+window.addEventListener('fireball-aim-changed', (e) => {
+  if (!btnFireball) return;
+  const active = !!e.detail?.active;
+  btnFireball.classList.toggle('active', active);
+  btnFireball.textContent = active ? 'Fireball: Aiming' : 'Aim Fireball';
 });
 
 window.addEventListener('hand-rendered', () => {
@@ -702,6 +740,8 @@ export {
   subscribeToState,
   updateMerchantVisibility,
   closeMerchant,
+  renderGearSlots,
+  renderInventory,
 };
 
 function renderMerchantSlots(piles) {
@@ -730,3 +770,88 @@ function renderMerchantSlots(piles) {
     merchantGrid.appendChild(slot);
   }
 }
+
+// -----------------------------
+// Gear Rendering
+// -----------------------------
+
+function renderGearSlots(equipped) {
+  if (!gearSlotsContainer) return;
+
+  const slots = gearSlotsContainer.querySelectorAll('.gear-slot');
+  slots.forEach((slotEl) => {
+    const slotName = slotEl.dataset.slot;
+    const gear = equipped[slotName];
+    const valueEl = slotEl.querySelector('.slot-value');
+
+    if (gear) {
+      slotEl.classList.add('has-gear');
+      slotEl.dataset.instanceId = gear.instanceId;
+      valueEl.textContent = gear.name;
+      valueEl.classList.remove('slot-empty');
+    } else {
+      slotEl.classList.remove('has-gear');
+      delete slotEl.dataset.instanceId;
+      valueEl.textContent = 'Empty';
+      valueEl.classList.add('slot-empty');
+    }
+  });
+}
+
+function renderInventory(inventory) {
+  if (!inventoryList) return;
+  inventoryList.innerHTML = '';
+
+  if (inventory.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.className = 'inventory-empty';
+    emptyEl.textContent = 'No items';
+    inventoryList.appendChild(emptyEl);
+    return;
+  }
+
+  for (const gear of inventory) {
+    const item = document.createElement('div');
+    item.className = 'inventory-item';
+    item.dataset.instanceId = gear.instanceId;
+    item.dataset.gearType = gear.type;
+
+    const name = document.createElement('span');
+    name.className = 'inventory-item-name';
+    name.textContent = gear.name;
+
+    const type = document.createElement('span');
+    type.className = 'inventory-item-type';
+    type.textContent = gear.type;
+
+    item.appendChild(name);
+    item.appendChild(type);
+    inventoryList.appendChild(item);
+  }
+}
+
+// Gear slot click - unequip to inventory
+gearSlotsContainer?.addEventListener('click', (e) => {
+  const slot = e.target.closest('.gear-slot');
+  if (!slot || !slot.classList.contains('has-gear')) return;
+
+  const slotName = slot.dataset.slot;
+  window.dispatchEvent(
+    new CustomEvent('gear-unequip', {
+      detail: { slot: slotName },
+    })
+  );
+});
+
+// Inventory item click - equip to slot
+inventoryList?.addEventListener('click', (e) => {
+  const item = e.target.closest('.inventory-item');
+  if (!item) return;
+
+  const instanceId = item.dataset.instanceId;
+  window.dispatchEvent(
+    new CustomEvent('gear-equip', {
+      detail: { instanceId },
+    })
+  );
+});

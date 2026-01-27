@@ -8,11 +8,13 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
 
 ## Read Order (Required)
 1) /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
-2) /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
-3) /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md
+2) /Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md
+3) /Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md
 4) /Users/tkogiah/ai-workspace/defend-the-castle/TODO.md
-5) /Users/tkogiah/ai-workspace/defend-the-castle/README.md
-6) Each module: read context.md, then index.js (wiring + public API)
+5) /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
+6) /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md
+7) /Users/tkogiah/ai-workspace/defend-the-castle/README.md
+8) Each module: read context.md, then index.js (wiring + public API)
    - /Users/tkogiah/ai-workspace/defend-the-castle/src/core/context.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/src/hex/context.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/src/config/context.md
@@ -24,7 +26,7 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/REVIEW_BRIEF_TEMPLATE.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/CHANGE_SUMMARY_TEMPLATE.md
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/agent-brief-state-rules.md
-8) Global context brief (read once per session):
+9) Global context brief (read once per session):
    - /Users/tkogiah/ai-workspace/defend-the-castle/tech/GLOBAL_CONTEXT_BRIEF.md
 
 ## Roles

@@ -10,10 +10,16 @@ import {
   getHexRing,
   buyMerchantCard,
   moveEnemies,
-  spawnEnemies,
+  spawnWaveEnemies,
+  spawnBoss,
   checkPlayerKnockout,
   endEnemyTurn,
   playMerchantCard,
+  updateWave,
+  equipGear,
+  unequipGear,
+  useAdjacentMove,
+  useFireball,
 } from './core/index.js';
 import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
 import {
@@ -48,6 +54,8 @@ state = startPlayerTurn(state);
 subscribeToState(() => state);
 emitStateChanged();
 let enemyPhaseInProgress = false;
+let fireballAimActive = false;
+let fireballHoverHex = null;
 
 function emitStateChanged() {
   const { q, r } = state.player.position;
@@ -81,7 +89,11 @@ function updateViewToFit(cssWidth, cssHeight) {
 }
 
 function loop() {
-  renderFrame(ctx, canvas, state, view);
+  renderFrame(ctx, canvas, state, view, {
+    fireball: fireballAimActive && fireballHoverHex
+      ? { centerHex: fireballHoverHex }
+      : null,
+  });
   requestAnimationFrame(loop);
 }
 
@@ -174,8 +186,19 @@ function beginEnemyPhaseWithAnimation() {
   enemyPhaseInProgress = true;
 
   let enemyBaseState = endPlayerTurn(state);
+
+  if (enemyBaseState.wave.bossJustDied) {
+    enemyBaseState = updateWave(enemyBaseState, { bossJustDied: false });
+    state = startPlayerTurn(enemyBaseState);
+    enemyPhaseInProgress = false;
+    emitStateChanged();
+    return;
+  }
+
   if (enemyBaseState.wave.enemiesSpawned === 0) {
-    enemyBaseState = spawnEnemies(enemyBaseState, 10);
+    enemyBaseState = spawnWaveEnemies(enemyBaseState);
+  } else if (!enemyBaseState.wave.bossSpawned) {
+    enemyBaseState = spawnBoss(enemyBaseState);
   }
 
   // Start new player turn immediately (player can act while enemies move).
@@ -221,6 +244,11 @@ setPlayerBoundaryCallback((direction) => {
 
 function handleMoveToHex(target) {
   if (isAnimatingPlayer()) return;
+  if (fireballAimActive) {
+    // In fireball aim mode: select target hex (don't cast yet)
+    fireballHoverHex = target;
+    return;
+  }
   const { q: tq, r: tr } = target;
 
   const hasEnemy = state.enemies.some(
@@ -258,6 +286,39 @@ function handleMoveDirection(direction) {
   }
 }
 
+function setFireballAim(active) {
+  fireballAimActive = active;
+  fireballHoverHex = null;
+  window.dispatchEvent(
+    new CustomEvent('fireball-aim-changed', { detail: { active: fireballAimActive } })
+  );
+}
+
+/**
+ * Handle fireball button/key action:
+ * - If not in aim mode: enter aim mode
+ * - If in aim mode with target selected: cast fireball
+ * - If in aim mode without target: exit aim mode (cancel)
+ */
+function handleFireballAction() {
+  if (!fireballAimActive) {
+    // Enter fireball aim mode
+    setFireballAim(true);
+  } else if (fireballHoverHex) {
+    // Cast fireball at selected target
+    if (isAnimatingEnemies()) return;
+    const nextState = useFireball(state, fireballHoverHex);
+    if (nextState !== state) {
+      state = nextState;
+      emitStateChanged();
+    }
+    setFireballAim(false);
+  } else {
+    // No target selected, cancel aim mode
+    setFireballAim(false);
+  }
+}
+
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 const cleanupInput = setupInputControls(canvas, view, {
@@ -265,6 +326,12 @@ const cleanupInput = setupInputControls(canvas, view, {
   boardRadius: BOARD_RADIUS,
   onMoveToHex: handleMoveToHex,
   onMoveDirection: handleMoveDirection,
+  onClickOutsideBoard: () => {
+    // Cancel fireball aim mode when tapping outside the board
+    if (fireballAimActive) {
+      setFireballAim(false);
+    }
+  },
 });
 
 function handleEndTurnKey(e) {
@@ -280,6 +347,14 @@ function handleEndTurnKey(e) {
 }
 
 window.addEventListener('keydown', handleEndTurnKey);
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() !== 'f') return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+    return;
+  }
+  e.preventDefault();
+  handleFireballAction();
+});
 
 window.addEventListener('card-played', (e) => {
   const { cardId, action } = e.detail || {};
@@ -319,6 +394,46 @@ window.addEventListener('merchant-buy', (e) => {
   if (!cardType) return;
   state = buyMerchantCard(state, cardType);
   emitStateChanged();
+});
+
+window.addEventListener('gear-equip', (e) => {
+  const { instanceId } = e.detail || {};
+  if (!instanceId) return;
+  state = equipGear(state, instanceId);
+  emitStateChanged();
+});
+
+window.addEventListener('gear-unequip', (e) => {
+  const { slot } = e.detail || {};
+  if (!slot) return;
+  state = unequipGear(state, slot);
+  emitStateChanged();
+});
+
+window.addEventListener('dragon-move', (e) => {
+  const { targetHex } = e.detail || {};
+  if (!targetHex) return;
+  if (isAnimatingPlayer() || isAnimatingEnemies()) return;
+  const nextState = useAdjacentMove(state, targetHex);
+  if (nextState !== state) {
+    state = nextState;
+    emitStateChanged();
+  }
+});
+
+window.addEventListener('fireball-cast', (e) => {
+  const { centerHex } = e.detail || {};
+  if (!centerHex) return;
+  if (isAnimatingEnemies()) return;
+  const nextState = useFireball(state, centerHex);
+  if (nextState !== state) {
+    state = nextState;
+    emitStateChanged();
+  }
+});
+
+window.addEventListener('fireball-toggle', () => {
+  handleFireballAction();
 });
 
 window.addEventListener('beforeunload', () => {

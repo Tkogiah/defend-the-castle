@@ -3,7 +3,7 @@
 Co-op fantasy deck-building tower defense on a 91-hex map. Defend the central castle against waves while upgrading your deck and gear.
 
 ## Current Status
-- MVP specs captured; no game code yet.
+- MVP implementation in progress (core loop, isometric render, UI, cards, gear, waves).
 - Stack: HTML, CSS, JavaScript, Canvas 2D.
 - Backend planned later (likely Node.js + WebSockets for multiplayer).
 
@@ -14,16 +14,18 @@ Co-op fantasy deck-building tower defense on a 91-hex map. Defend the central ca
 - Spatial tension: distance from center should feel rewarding and risky.
 - Co-op emphasis: choices should encourage teamwork and trade-offs.
 
-## Project Structure
-- `CONTEXT.md`: single source of truth for project decisions.
-- `specs/`: gameplay and MVP specifications.
-- `src/`: planned implementation modules (placeholder).
-- `tech/`: technical notes and architecture references.
+## How to Run (Local)
+- Open `index.html` in a browser, or use a simple static server.
 
-## Where to Start
-- Read `CONTEXT.md` to re-anchor decisions.
-- Read `specs/mvp.md` and `specs/gameplay.md` for rules.
-- Use `DECISIONS.md` to log any new architecture or gameplay decisions.
+## Architecture at a Glance
+- `main.js` is the only composition root.
+- Modules: `core/`, `render/`, `input/`, `ui/`, `hex/`, `data/`, `config/`.
+- Full boundaries: see `MODULE_MAP.md`.
+
+## Where Decisions Live
+- `CONTEXT.md`: source of truth for project decisions.
+- `DECISIONS.md`: log of durable decisions.
+- `MVP_ROADMAP.md`: staged MVP plan.
 
 ## Priority Decisions (MVP)
 1) Turn model:

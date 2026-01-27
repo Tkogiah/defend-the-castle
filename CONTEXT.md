@@ -10,12 +10,14 @@ Single source of truth for this project. Keep concise and current.
 ## Context Reload Template (for assistants)
 Use this checklist on session start or after reload.
 1) Read: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md (this file).
-2) Read: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md.
-3) Read: /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md (recent notes).
+2) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md (module boundaries + wiring rules).
+3) Read: /Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md (last session state).
 4) Read: /Users/tkogiah/ai-workspace/defend-the-castle/TODO.md (current tasks).
-5) Read: /Users/tkogiah/ai-workspace/defend-the-castle/README.md (high-level framing).
-6) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md (staged MVP plan).
-6) If folders are split, read each folder’s index.js to understand wiring.
+5) Read: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md.
+6) Read: /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md (recent notes).
+7) Read: /Users/tkogiah/ai-workspace/defend-the-castle/README.md (high-level framing).
+8) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md (staged MVP plan).
+9) If folders are split, read each folder’s index.js to understand wiring.
    - index.js files define module boundaries, wiring, and public APIs. Read these first in each folder.
    - Smaller module files contain focused logic only.
 
