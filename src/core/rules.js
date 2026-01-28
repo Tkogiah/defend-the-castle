@@ -715,7 +715,6 @@ export function onBossDefeated(state) {
   // 4. Advance wave and spawn next (if not wave 10)
   if (state.wave.current < 10) {
     newState = advanceWave(newState);
-    newState = spawnWaveEnemies(newState);
   }
 
   return newState;
