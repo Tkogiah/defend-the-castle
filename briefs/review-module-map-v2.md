@@ -23,3 +23,6 @@ Outputs expected
 - Bullet list of edits with reasoning.
 - Exact wording changes where possible.
 - Open questions or risks.
+
+Execution rule
+- Propose plan first; do not implement until explicitly approved.

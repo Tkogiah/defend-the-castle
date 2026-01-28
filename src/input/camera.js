@@ -4,10 +4,13 @@
  * No game logic; only modifies view state.
  */
 
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 3;
-const ZOOM_SENSITIVITY = 0.001;
-const PINCH_SENSITIVITY = 0.01;
+import {
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_SENSITIVITY,
+  PINCH_SENSITIVITY,
+  CLICK_THRESHOLD,
+} from '../config/index.js';
 
 /**
  * Set up camera controls for pan and zoom.
@@ -194,6 +197,3 @@ export function setupCameraControls(canvas, view) {
     },
   };
 }
-
-// Movement threshold to distinguish click from drag (in CSS pixels)
-const CLICK_THRESHOLD = 5;

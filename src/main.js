@@ -65,6 +65,14 @@ let enemyPhaseInProgress = false;
 let fireballAimActive = false;
 let fireballHoverHex = null;
 
+function withErrorBoundary(label, fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error(`[Error] ${label}`, err);
+  }
+}
+
 function emitStateChanged() {
   const { q, r } = state.player.position;
   const ring = getHexRing(state, q, r);
@@ -97,10 +105,12 @@ function updateViewToFit(cssWidth, cssHeight) {
 }
 
 function loop() {
-  renderFrame(ctx, canvas, state, view, {
-    fireball: fireballAimActive && fireballHoverHex
-      ? { centerHex: fireballHoverHex }
-      : null,
+  withErrorBoundary('renderFrame', () => {
+    renderFrame(ctx, canvas, state, view, {
+      fireball: fireballAimActive && fireballHoverHex
+        ? { centerHex: fireballHoverHex }
+        : null,
+    });
   });
   requestAnimationFrame(loop);
 }
@@ -282,15 +292,17 @@ const cleanupInput = setupInputControls(canvas, view, {
 });
 
 function handleEndTurnKey(e) {
-  if (e.key !== 'Enter') return;
-  if (document.body.classList.contains('merchant-open')) return;
-  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-    return;
-  }
-  if (state.phase !== 'playerTurn') return;
-  if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
-  e.preventDefault();
-  beginEnemyPhaseWithAnimation();
+  withErrorBoundary('end-turn-key', () => {
+    if (e.key !== 'Enter') return;
+    if (document.body.classList.contains('merchant-open')) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      return;
+    }
+    if (state.phase !== 'playerTurn') return;
+    if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
+    e.preventDefault();
+    beginEnemyPhaseWithAnimation();
+  });
 }
 
 window.addEventListener('keydown', handleEndTurnKey);
@@ -300,87 +312,107 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   e.preventDefault();
-  handleFireballAction();
+  withErrorBoundary('fireball-toggle-key', () => {
+    handleFireballAction();
+  });
 });
 
 window.addEventListener('card-played', (e) => {
-  const { cardId, action } = e.detail || {};
-  if (!cardId) return;
+  withErrorBoundary('card-played', () => {
+    const { cardId, action } = e.detail || {};
+    if (!cardId) return;
 
-  const card = state.player.hand.find((c) => c.id === cardId);
-  if (!card) return;
+    const card = state.player.hand.find((c) => c.id === cardId);
+    if (!card) return;
 
-  if (card.type === 'action') {
-    if (!action) return;
-    state = playActionCard(state, cardId, action);
-  } else if (card.type === 'merchant') {
-    state = playMerchantCard(state, cardId);
-  } else {
-    return;
-  }
-  emitStateChanged();
+    if (card.type === 'action') {
+      if (!action) return;
+      state = playActionCard(state, cardId, action);
+    } else if (card.type === 'merchant') {
+      state = playMerchantCard(state, cardId);
+    } else {
+      return;
+    }
+    emitStateChanged();
+  });
 });
 
 window.addEventListener('end-turn', () => {
-  if (document.body.classList.contains('merchant-open')) return;
-  if (state.phase !== 'playerTurn') return;
-  if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
-  beginEnemyPhaseWithAnimation();
+  withErrorBoundary('end-turn', () => {
+    if (document.body.classList.contains('merchant-open')) return;
+    if (state.phase !== 'playerTurn') return;
+    if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
+    beginEnemyPhaseWithAnimation();
+  });
 });
 
 window.addEventListener('crystal-sold', (e) => {
-  const { cardId, value } = e.detail || {};
-  if (!cardId || !Number.isFinite(value)) return;
-  state = removeCardFromHand(state, cardId);
-  state = addPlayerGold(state, value);
-  emitStateChanged();
+  withErrorBoundary('crystal-sold', () => {
+    const { cardId, value } = e.detail || {};
+    if (!cardId || !Number.isFinite(value)) return;
+    state = removeCardFromHand(state, cardId);
+    state = addPlayerGold(state, value);
+    emitStateChanged();
+  });
 });
 
 window.addEventListener('merchant-buy', (e) => {
-  const { cardType } = e.detail || {};
-  if (!cardType) return;
-  state = buyMerchantCard(state, cardType);
-  emitStateChanged();
+  withErrorBoundary('merchant-buy', () => {
+    const { cardType } = e.detail || {};
+    if (!cardType) return;
+    state = buyMerchantCard(state, cardType);
+    emitStateChanged();
+  });
 });
 
 window.addEventListener('gear-equip', (e) => {
-  const { instanceId } = e.detail || {};
-  if (!instanceId) return;
-  state = equipGear(state, instanceId);
-  emitStateChanged();
+  withErrorBoundary('gear-equip', () => {
+    const { instanceId } = e.detail || {};
+    if (!instanceId) return;
+    state = equipGear(state, instanceId);
+    emitStateChanged();
+  });
 });
 
 window.addEventListener('gear-unequip', (e) => {
-  const { slot } = e.detail || {};
-  if (!slot) return;
-  state = unequipGear(state, slot);
-  emitStateChanged();
+  withErrorBoundary('gear-unequip', () => {
+    const { slot } = e.detail || {};
+    if (!slot) return;
+    state = unequipGear(state, slot);
+    emitStateChanged();
+  });
 });
 
 window.addEventListener('dragon-move', (e) => {
-  const { targetHex } = e.detail || {};
-  if (!targetHex) return;
-  if (isAnimatingPlayer() || isAnimatingEnemies()) return;
-  const nextState = useAdjacentMove(state, targetHex);
-  if (nextState !== state) {
-    state = nextState;
-    emitStateChanged();
-  }
+  withErrorBoundary('dragon-move', () => {
+    const { targetHex } = e.detail || {};
+    if (!targetHex) return;
+    if (isAnimatingPlayer() || isAnimatingEnemies()) return;
+    const nextState = useAdjacentMove(state, targetHex);
+    if (nextState !== state) {
+      state = nextState;
+      emitStateChanged();
+    }
+  });
 });
 
 window.addEventListener('fireball-cast', (e) => {
-  const { centerHex } = e.detail || {};
-  if (!centerHex) return;
-  if (isAnimatingEnemies()) return;
-  const nextState = useFireball(state, centerHex);
-  if (nextState !== state) {
-    state = nextState;
-    emitStateChanged();
-  }
+  withErrorBoundary('fireball-cast', () => {
+    const { centerHex } = e.detail || {};
+    if (!centerHex) return;
+    if (isAnimatingEnemies()) return;
+    const nextState = useFireball(state, centerHex);
+    if (nextState !== state) {
+      state = nextState;
+      emitStateChanged();
+    }
+  });
 });
 
 window.addEventListener('fireball-toggle', () => {
-  handleFireballAction();
+  withErrorBoundary('fireball-toggle', () => {
+    handleFireballAction();
+  });
 });
 
 window.addEventListener('beforeunload', () => {

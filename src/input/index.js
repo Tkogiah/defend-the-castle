@@ -20,22 +20,21 @@ export { screenToHex };
  * @param {number} [options.boardRadius] - board radius for bounds filtering
  * @param {function({ q: number, r: number }): void} [options.onMoveToHex] - click-to-move callback
  * @param {function('N'|'NE'|'E'|'SE'|'S'|'SW'|'W'|'NW'): void} [options.onMoveDirection] - keyboard direction callback
- * @param {function({ q: number, r: number } | null): void} [options.onHoverHex] - hover callback
  * @returns {function(): void} cleanup function to remove listeners
  */
 export function setupInputControls(canvas, view, options = {}) {
-  const { hexSize, boardRadius, onMoveToHex, onMoveDirection, onHoverHex } = options;
+  const { hexSize, boardRadius, onMoveToHex, onMoveDirection, onClickOutsideBoard } = options;
 
   // Set up camera controls (pan/zoom)
   const camera = setupCameraControls(canvas, view);
 
-  // Set up movement controls (click-to-move, keyboard directions, hover)
+  // Set up movement controls (click-to-move, keyboard directions)
   const movementCleanup = setupMovementControls(canvas, view, {
     hexSize,
     boardRadius,
     onMoveToHex,
     onMoveDirection,
-    onHoverHex,
+    onClickOutsideBoard,
     hasMoved: camera.hasMoved,
   });
 

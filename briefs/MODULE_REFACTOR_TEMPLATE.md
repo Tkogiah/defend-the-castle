@@ -39,3 +39,6 @@ Take ownership of one full module and break it into small, focused files with a 
 
 ## Review Notes (for lead)
 - Confirm no scope creep beyond MVP.
+
+## Execution Rule
+- Propose plan first; do not implement until explicitly approved.

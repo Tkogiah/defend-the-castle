@@ -23,3 +23,6 @@ Expected output
 - Summary of changes
 - Files touched
 - Open questions/risks
+
+Execution rule
+- Propose plan first; do not implement until explicitly approved.

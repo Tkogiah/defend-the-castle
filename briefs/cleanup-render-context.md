@@ -18,3 +18,6 @@ Constraints
 Expected output
 - Summary of edits
 - Files touched
+
+Execution rule
+- Propose plan first; do not implement until explicitly approved.

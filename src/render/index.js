@@ -10,7 +10,6 @@ import {
   drawMovementRange,
   drawAttackRange,
   drawFireballRange,
-  drawFireballDebugDot,
 } from './overlays.js';
 import { ISO_SCALE_Y } from '../config/index.js';
 import {
@@ -82,7 +81,6 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
   // Fireball targeting overlay (red dashed outlines)
   if (overlay?.fireball?.centerHex) {
     drawFireballRange(ctx, state.hexGrid, overlay.fireball.centerHex, 3);
-    drawFireballDebugDot(ctx, overlay.fireball.centerHex);
   }
 
   // Entities with animated positions

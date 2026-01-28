@@ -4,15 +4,42 @@
 Canvas rendering for hex grid, game entities, and UI elements.
 
 ## Public API (index.js)
-- `renderFrame(ctx, canvas, state, view)` — renders a single frame
 
-### Parameters
+### renderFrame
+`renderFrame(ctx, canvas, state, view, overlay = null)` — renders a single frame
+
+#### Parameters
 | Param | Type | Description |
 |-------|------|-------------|
 | `ctx` | CanvasRenderingContext2D | Canvas 2D context |
 | `canvas` | HTMLCanvasElement | Canvas element (for dimensions) |
-| `state` | Object | Game state with `hexGrid` and `player` |
+| `state` | Object | Game state with `hexGrid`, `player`, `enemies` |
 | `view` | Object | View state: `{ panX, panY, zoom }` |
+| `overlay` | Object \| null | Optional overlay hints (see below) |
+
+#### Overlay Parameter
+The `overlay` object enables optional visual overlays during rendering:
+
+```js
+{
+  fireball: {
+    centerHex: { q: number, r: number }  // Target hex for fireball AOE
+  }
+}
+```
+
+**Fireball overlay**: When `overlay.fireball.centerHex` is provided, draws:
+- Red outlined hexes within range 3 of the center hex (AOE preview)
+- Red dot at the center hex (targeting indicator)
+
+### Animation Exports
+- `startPlayerAnimation(from, to, onComplete)` — animate player movement
+- `startEnemyAnimations(moves, onComplete)` — animate enemy movements
+- `isAnimatingPlayer()` — returns true if player animation in progress
+- `isAnimatingEnemies()` — returns true if enemy animations in progress
+- `setPlayerHeldDirection(direction)` — set held movement direction for drift
+- `setPlayerBoundaryCallback(callback)` — set boundary check for drift movement
+- `resetPlayerDrift()` — reset player drift state
 
 ## Key Files
 - `grid.js`: Hex grid drawing with spiral gradient fill. Contains color utilities.

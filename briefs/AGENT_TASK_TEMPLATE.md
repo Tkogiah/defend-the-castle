@@ -34,3 +34,6 @@
 
 ## Review Notes (for lead)
 - Confirm no scope creep beyond MVP.
+
+## Execution Rule
+- Propose plan first; do not implement until explicitly approved.
