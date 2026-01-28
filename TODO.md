@@ -3,12 +3,9 @@
 Short, actionable items only. Keep high-level items at top; break down later.
 
 ## Now
-- Fix fireball hover targeting (if still broken).
-- Resolve click-to-move ghost/phantom frame at end of animation.
-- Agree on module cleanup order after Claude's module-map review.
+- (empty)
 
 ## Next
-- Define a git branching plan for video capture/documentation workflow before integrating updates.
 - Test touch drag-to-move on mobile and map drag direction to the 6 path directions.
 - Add merchant card detail view (tap to read effect before buy), mobile-first.
 - Review MODULE_ALIGNMENT_AUDIT.md after Claude's module map feedback.
@@ -35,3 +32,9 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Audited module alignment in MODULE_ALIGNMENT_AUDIT.md.
 - Created module cleanup plan in MODULE_CLEANUP_TASKS.md.
 - Added UI module docs/entrypoint (src/ui/context.md, src/ui/index.js).
+
+2026-01-28
+- Fireball hover targeting resolved (hover removed; click-to-aim only).
+- Click-to-move ghost/phantom frame fixed via player snap render refactor.
+- Module cleanup order agreed and executed per MODULE_CLEANUP_TASKS.md.
+- Branching/recording workflow documented in MVP_ROADMAP.md.

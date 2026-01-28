@@ -5,6 +5,7 @@ This roadmap is designed for a record-first workflow:
 - Document the change
 - Merge into `main`
 - After filming/notes, fast-forward `recording` to that commit
+- Create a `session-summary-YYYY-MM-DD` tag at each recording snapshot
 
 ## Stage 1 — Data Definitions (MVP-only)
 Scope: cards, gear, enemies, shop inventory.
