@@ -38,7 +38,7 @@ import {
   resetGearUsedThisTurn,
   getOwnedGearIds,
 } from './state.js';
-import { getSpiralLabel, getSpiralAxial, axialDistance, getNeighbors } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial, axialDistance, getNeighbors, buildSpiralPath } from '../hex/index.js';
 import { createCrystalCard, createMerchantCard } from './cards.js';
 import { createGearInstance, getRandomGearDrop } from './gear.js';
 
@@ -628,6 +628,27 @@ export function checkPlayerKnockout(state) {
   }
 
   return state;
+}
+
+/**
+ * Build enemy move animation data by diffing before/after state.
+ * Returns an array of { enemyId, path } for enemies that moved.
+ * @param {Object} beforeState - state before moveEnemies
+ * @param {Object} afterState - state after moveEnemies
+ * @returns {Array<{ enemyId: string, path: Array<{ q: number, r: number }> }>}
+ */
+export function buildEnemyMoves(beforeState, afterState) {
+  const beforeById = new Map(beforeState.enemies.map((e) => [e.id, e]));
+  const moves = [];
+  for (const enemy of afterState.enemies) {
+    const before = beforeById.get(enemy.id);
+    if (!before) continue;
+    const path = buildSpiralPath(before.position, enemy.position);
+    if (path.length >= 2) {
+      moves.push({ enemyId: enemy.id, path });
+    }
+  }
+  return moves;
 }
 
 export function runEnemyPhase(state) {

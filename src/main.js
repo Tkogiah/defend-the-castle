@@ -20,8 +20,16 @@ import {
   unequipGear,
   useAdjacentMove,
   useFireball,
+  buildEnemyMoves,
 } from './core/index.js';
-import { generateHexGrid, getSpiralLabel, getSpiralAxial } from './hex/index.js';
+import {
+  generateHexGrid,
+  getSpiralLabel,
+  getSpiralAxial,
+  getDirectionFromDelta,
+  buildSpiralPath,
+  resolveStepForDirection,
+} from './hex/index.js';
 import {
   renderFrame,
   startPlayerAnimation,
@@ -97,20 +105,6 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-function buildSpiralPath(from, to) {
-  const startLabel = getSpiralLabel(from.q, from.r);
-  const endLabel = getSpiralLabel(to.q, to.r);
-  if (startLabel === null || endLabel === null) return [from];
-
-  const step = endLabel >= startLabel ? 1 : -1;
-  const path = [];
-  for (let label = startLabel; label !== endLabel + step; label += step) {
-    const pos = getSpiralAxial(label);
-    if (pos) path.push(pos);
-  }
-  return path;
-}
-
 function startPlayerMoveSequence(path) {
   if (!Array.isArray(path) || path.length < 2) return;
   if (isAnimatingPlayer()) return;
@@ -140,43 +134,6 @@ function startPlayerMoveSequence(path) {
   moveNext();
 }
 
-function resolveStepForDirection(direction) {
-  const { q, r } = state.player.position;
-  const currentLabel = getSpiralLabel(q, r);
-  if (currentLabel === null) return null;
-
-  const forwardPos = getSpiralAxial(currentLabel + 1);
-  const backwardPos = getSpiralAxial(currentLabel - 1);
-
-  const forwardDir = forwardPos
-    ? getDirectionFromDelta(forwardPos.q - q, forwardPos.r - r)
-    : null;
-  const backwardDir = backwardPos
-    ? getDirectionFromDelta(backwardPos.q - q, backwardPos.r - r)
-    : null;
-
-  if (direction === forwardDir && forwardPos) {
-    return forwardPos;
-  }
-  if (direction === backwardDir && backwardPos) {
-    return backwardPos;
-  }
-  return null;
-}
-
-function buildEnemyMoves(beforeState, afterState) {
-  const beforeById = new Map(beforeState.enemies.map((e) => [e.id, e]));
-  const moves = [];
-  for (const enemy of afterState.enemies) {
-    const before = beforeById.get(enemy.id);
-    if (!before) continue;
-    const path = buildSpiralPath(before.position, enemy.position);
-    if (path.length >= 2) {
-      moves.push({ enemyId: enemy.id, path });
-    }
-  }
-  return moves;
-}
 
 function beginEnemyPhaseWithAnimation() {
   if (state.phase !== 'playerTurn') return;
@@ -222,7 +179,7 @@ setPlayerBoundaryCallback((direction) => {
   if (isAnimatingPlayer()) return { valid: false };
   if (direction === 'N' || direction === 'S') return { valid: false };
 
-  const toHex = resolveStepForDirection(direction);
+  const toHex = resolveStepForDirection(state.player.position, direction);
   if (!toHex) return { valid: false };
 
   const nextState = movePlayer(state, toHex);
@@ -267,16 +224,6 @@ function handleMoveToHex(target) {
 
   const path = buildSpiralPath(state.player.position, target);
   startPlayerMoveSequence(path);
-}
-
-function getDirectionFromDelta(dq, dr) {
-  if (dq === 1 && dr === -1) return 'NE';
-  if (dq === 1 && dr === 0) return 'E';
-  if (dq === 0 && dr === 1) return 'SE';
-  if (dq === -1 && dr === 1) return 'SW';
-  if (dq === -1 && dr === 0) return 'W';
-  if (dq === 0 && dr === -1) return 'NW';
-  return null;
 }
 
 function handleMoveDirection(direction) {

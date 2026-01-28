@@ -4,7 +4,7 @@
  */
 
 import { BOARD_RADIUS } from '../config/index.js';
-import { hexKey, DIR, CLOCKWISE_AFTER_EAST, hexCountForRadius } from './coords.js';
+import { hexKey, DIR, CLOCKWISE_AFTER_EAST, hexCountForRadius, getDirectionFromDelta } from './coords.js';
 
 const SPIRAL_CACHE = new Map();
 const ADJACENT_PREFERENCE = Object.freeze(['E', 'SE', 'SW', 'W', 'NW', 'NE']);
@@ -84,6 +84,64 @@ export function neighborsOfLabel(label, spiral) {
     if (typeof n === 'number') out.push({ dir: dirName, n, q, r });
   }
   return out;
+}
+
+// -----------------------------
+// Spiral Path Helpers
+// -----------------------------
+
+/**
+ * Build an array of hex positions along the spiral path between two hexes.
+ * @param {{ q: number, r: number }} from - start position
+ * @param {{ q: number, r: number }} to - end position
+ * @param {number} [radius] - board radius (default BOARD_RADIUS)
+ * @returns {Array<{ q: number, r: number }>} path from start to end (inclusive)
+ */
+export function buildSpiralPath(from, to, radius = BOARD_RADIUS) {
+  const startLabel = getSpiralLabel(from.q, from.r, radius);
+  const endLabel = getSpiralLabel(to.q, to.r, radius);
+  if (startLabel === null || endLabel === null) return [from];
+
+  const step = endLabel >= startLabel ? 1 : -1;
+  const path = [];
+  for (let label = startLabel; label !== endLabel + step; label += step) {
+    const pos = getSpiralAxial(label, radius);
+    if (pos) path.push(pos);
+  }
+  return path;
+}
+
+/**
+ * Resolve the next spiral step for a given compass direction.
+ * Returns the hex position if the direction matches forward or backward movement,
+ * or null if the direction doesn't align with the spiral path.
+ * @param {{ q: number, r: number }} position - current position
+ * @param {string} direction - compass direction (NE, E, SE, SW, W, NW)
+ * @param {number} [radius] - board radius (default BOARD_RADIUS)
+ * @returns {{ q: number, r: number }|null} next position or null
+ */
+export function resolveStepForDirection(position, direction, radius = BOARD_RADIUS) {
+  const { q, r } = position;
+  const currentLabel = getSpiralLabel(q, r, radius);
+  if (currentLabel === null) return null;
+
+  const forwardPos = getSpiralAxial(currentLabel + 1, radius);
+  const backwardPos = getSpiralAxial(currentLabel - 1, radius);
+
+  const forwardDir = forwardPos
+    ? getDirectionFromDelta(forwardPos.q - q, forwardPos.r - r)
+    : null;
+  const backwardDir = backwardPos
+    ? getDirectionFromDelta(backwardPos.q - q, backwardPos.r - r)
+    : null;
+
+  if (direction === forwardDir && forwardPos) {
+    return forwardPos;
+  }
+  if (direction === backwardDir && backwardPos) {
+    return backwardPos;
+  }
+  return null;
 }
 
 // -----------------------------

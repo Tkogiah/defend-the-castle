@@ -16,6 +16,7 @@ export {
   hexCountForRadius,
   inRadiusBoard,
   areAxialNeighbors,
+  getDirectionFromDelta,
 } from './coords.js';
 
 // Grid generation and queries
@@ -30,11 +31,13 @@ export {
   findPathTowardCenter,
 } from './grid.js';
 
-// Spiral labeling
+// Spiral labeling and pathing
 export {
   generateRadialSpiralAxial,
   getSpiralData,
   getSpiralLabel,
   getSpiralAxial,
   neighborsOfLabel,
+  buildSpiralPath,
+  resolveStepForDirection,
 } from './spiral.js';

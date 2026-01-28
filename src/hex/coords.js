@@ -92,3 +92,19 @@ export function areAxialNeighbors(q1, r1, q2, r2) {
     (dq === 1 && dr === -1)    // NE
   );
 }
+
+/**
+ * Get compass direction from axial delta.
+ * @param {number} dq - delta q
+ * @param {number} dr - delta r
+ * @returns {string|null} Direction name (NE, E, SE, SW, W, NW) or null
+ */
+export function getDirectionFromDelta(dq, dr) {
+  if (dq === 1 && dr === -1) return 'NE';
+  if (dq === 1 && dr === 0) return 'E';
+  if (dq === 0 && dr === 1) return 'SE';
+  if (dq === -1 && dr === 1) return 'SW';
+  if (dq === -1 && dr === 0) return 'W';
+  if (dq === 0 && dr === -1) return 'NW';
+  return null;
+}
