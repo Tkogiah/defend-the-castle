@@ -35,7 +35,7 @@ let lastFrameTime = null;
 // Player drift state (within-hex movement)
 let playerDrift = { x: 0, y: 0 };      // Offset from hex center in pixels
 let playerHeldDirection = null;         // Currently held direction from input
-let playerSnapAnim = null;              // { fromOffset, toHex, progress, duration, onComplete, completed, completedAt }
+let playerSnapAnim = null;              // { fromOffset, fromHex?, toHex, progress, duration, onComplete, completed, completedAt }
 
 // Enemy animation state
 let enemyAnims = new Map();  // Map<enemyId, { from, to, progress, duration }>
@@ -73,9 +73,10 @@ export function setPlayerHeldDirection(direction) {
  * @param {{ q: number, r: number }} toHex - target hex
  * @param {function(): void} [onComplete] - callback when snap finishes
  */
-function startPlayerSnapAnimation(toHex, onComplete = null) {
+function startPlayerSnapAnimation(toHex, onComplete = null, fromHex = null) {
   playerSnapAnim = {
     fromOffset: { ...playerDrift },
+    fromHex: fromHex ? { ...fromHex } : null,
     toHex: { ...toHex },
     progress: 0,
     duration: PLAYER_SNAP_DURATION,
@@ -283,9 +284,19 @@ export function getPlayerVisualPosition(logicalPos) {
     const toPixel = axialToPixel(playerSnapAnim.toHex.q, playerSnapAnim.toHex.r, HEX_SIZE);
     const t = easeInOutQuad(playerSnapAnim.progress);
 
-    // Interpolate from (base + fromOffset) to toPixel
-    const fromX = basePixel.x + playerSnapAnim.fromOffset.x;
-    const fromY = basePixel.y + playerSnapAnim.fromOffset.y;
+    // Interpolate from explicit fromHex when provided (click-to-move),
+    // otherwise use logical base + drift offset (keyboard movement).
+    let fromX = basePixel.x + playerSnapAnim.fromOffset.x;
+    let fromY = basePixel.y + playerSnapAnim.fromOffset.y;
+    if (playerSnapAnim.fromHex) {
+      const fromPixel = axialToPixel(
+        playerSnapAnim.fromHex.q,
+        playerSnapAnim.fromHex.r,
+        HEX_SIZE
+      );
+      fromX = fromPixel.x;
+      fromY = fromPixel.y;
+    }
 
     return {
       x: fromX + (toPixel.x - fromX) * t,
@@ -298,6 +309,21 @@ export function getPlayerVisualPosition(logicalPos) {
     x: basePixel.x + playerDrift.x,
     y: basePixel.y + playerDrift.y,
   };
+}
+
+/**
+ * Get debug positions for player rendering.
+ * @param {{ q: number, r: number }} logicalPos
+ * @returns {{ logical: {x:number,y:number}, visual: {x:number,y:number}, target: {x:number,y:number}|null }}
+ */
+export function getPlayerDebugData(logicalPos) {
+  const logical = axialToPixel(logicalPos.q, logicalPos.r, HEX_SIZE);
+  const visual = getPlayerVisualPosition(logicalPos);
+  let target = null;
+  if (playerSnapAnim) {
+    target = axialToPixel(playerSnapAnim.toHex.q, playerSnapAnim.toHex.r, HEX_SIZE);
+  }
+  return { logical, visual, target };
 }
 
 /**
@@ -359,7 +385,7 @@ function easeInOutQuad(t) {
 
 // Legacy exports for compatibility (deprecated)
 export function startPlayerAnimation(from, to, onComplete = null) {
-  startPlayerSnapAnimation(to, onComplete);
+  startPlayerSnapAnimation(to, onComplete, from);
 }
 
 export function getAnimatedPosition(logicalPos, entityType, entityId = null) {

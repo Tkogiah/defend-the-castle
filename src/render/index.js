@@ -15,6 +15,7 @@ import { ISO_SCALE_Y } from '../config/index.js';
 import {
   updateAnimations,
   getPlayerVisualPosition,
+  getPlayerDebugData,
   getEnemyVisualPosition,
   startPlayerAnimation,
   startEnemyAnimations,
@@ -96,6 +97,30 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
 
   const playerVisualPos = getPlayerVisualPosition(state.player.position);
   drawPlayer(ctx, playerVisualPos);
+
+  if (overlay?.debugPlayer) {
+    const debug = getPlayerDebugData(state.player.position);
+    ctx.save();
+    ctx.lineWidth = 2;
+    // logical position (blue)
+    ctx.strokeStyle = 'rgba(80, 160, 255, 0.9)';
+    ctx.beginPath();
+    ctx.arc(debug.logical.x, debug.logical.y, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    // visual position (yellow)
+    ctx.strokeStyle = 'rgba(240, 210, 80, 0.9)';
+    ctx.beginPath();
+    ctx.arc(debug.visual.x, debug.visual.y, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    // snap target (red)
+    if (debug.target) {
+      ctx.strokeStyle = 'rgba(240, 80, 80, 0.9)';
+      ctx.beginPath();
+      ctx.arc(debug.target.x, debug.target.y, 6, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   ctx.restore();
 }

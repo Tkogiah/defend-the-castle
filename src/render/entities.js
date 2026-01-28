@@ -54,9 +54,9 @@ export function drawEnemies(ctx, enemies) {
     const { x, y } = enemy.visualPosition
       ? enemy.visualPosition
       : axialToPixel(enemy.position.q, enemy.position.r, HEX_SIZE);
-    const radius = HEX_SIZE * 0.28;
-    const baseColor = '#c24b5a';
-    const strokeColor = '#2b0f14';
+    const radius = enemy.isBoss ? HEX_SIZE * 0.5 : HEX_SIZE * 0.28;
+    const baseColor = enemy.isBoss ? '#3a7bd5' : '#c24b5a';
+    const strokeColor = enemy.isBoss ? '#0c1a33' : '#2b0f14';
     drawCylinder(ctx, x, y, radius, ENTITY_HEIGHT, baseColor, strokeColor);
   }
 
@@ -78,6 +78,7 @@ export function drawEnemies(ctx, enemies) {
       entry.count += 1;
       entry.totalHp += enemy.hp;
       entry.totalMaxHp += enemy.maxHp;
+      entry.isBoss = entry.isBoss || !!enemy.isBoss;
     } else {
       buckets.set(key, {
         x,
@@ -85,14 +86,15 @@ export function drawEnemies(ctx, enemies) {
         count: 1,
         totalHp: enemy.hp,
         totalMaxHp: enemy.maxHp,
+        isBoss: !!enemy.isBoss,
       });
     }
   }
 
-  for (const { x, y, count, totalHp, totalMaxHp } of buckets.values()) {
-    const radius = count > 1 ? HEX_SIZE * 0.36 : HEX_SIZE * 0.28;
-    const baseColor = count > 1 ? '#d45163' : '#c24b5a';
-    const strokeColor = '#2b0f14';
+  for (const { x, y, count, totalHp, totalMaxHp, isBoss } of buckets.values()) {
+    const radius = isBoss ? HEX_SIZE * 0.5 : count > 1 ? HEX_SIZE * 0.36 : HEX_SIZE * 0.28;
+    const baseColor = isBoss ? '#3a7bd5' : count > 1 ? '#d45163' : '#c24b5a';
+    const strokeColor = isBoss ? '#0c1a33' : '#2b0f14';
 
     // Draw enemy cylinder
     drawCylinder(ctx, x, y, radius, ENTITY_HEIGHT, baseColor, strokeColor);
@@ -117,7 +119,7 @@ export function drawEnemies(ctx, enemies) {
     }
 
     // Enemy count label on side (centered on body)
-    if (count > 1) {
+    if (count > 1 && !isBoss) {
       ctx.fillStyle = '#1a0c0e';
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center';

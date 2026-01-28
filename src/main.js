@@ -46,6 +46,7 @@ import {
   updateMerchantVisibility,
   closeMerchant,
 } from './ui/index.js';
+import { registerDebugHotkeys, getDebugOverlay } from './debug/index.js';
 import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y, FIT_PADDING } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -64,6 +65,7 @@ emitStateChanged();
 let enemyPhaseInProgress = false;
 let fireballAimActive = false;
 let fireballHoverHex = null;
+registerDebugHotkeys(window);
 
 function withErrorBoundary(label, fn) {
   try {
@@ -106,10 +108,12 @@ function updateViewToFit(cssWidth, cssHeight) {
 
 function loop() {
   withErrorBoundary('renderFrame', () => {
+    const debugOverlay = getDebugOverlay();
     renderFrame(ctx, canvas, state, view, {
       fireball: fireballAimActive && fireballHoverHex
         ? { centerHex: fireballHoverHex }
         : null,
+      debugPlayer: debugOverlay.debugPlayer,
     });
   });
   requestAnimationFrame(loop);
