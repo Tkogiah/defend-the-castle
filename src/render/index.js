@@ -10,6 +10,7 @@ import {
   drawMovementRange,
   drawAttackRange,
   drawFireballRange,
+  drawDragonRange,
 } from './overlays.js';
 import { ISO_SCALE_Y } from '../config/index.js';
 import {
@@ -82,6 +83,11 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
   // Fireball targeting overlay (red dashed outlines)
   if (overlay?.fireball?.centerHex) {
     drawFireballRange(ctx, state.hexGrid, overlay.fireball.centerHex, 3);
+  }
+
+  // Dragon mount targeting overlay (purple mesh for adjacent hexes)
+  if (overlay?.dragon?.active) {
+    drawDragonRange(ctx, state.hexGrid, state.player.position, state.enemies);
   }
 
   // Entities with animated positions

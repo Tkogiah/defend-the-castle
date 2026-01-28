@@ -20,6 +20,7 @@ const btnCharacter = document.getElementById('btn-character');
 const btnCloseSheet = document.getElementById('btn-close-sheet');
 const btnEndTurn = document.getElementById('btn-end-turn');
 const btnFireball = document.getElementById('btn-fireball');
+const btnDragon = document.getElementById('btn-dragon');
 const handCards = document.getElementById('hand-cards');
 const dropZone = document.getElementById('play-card-zone');
 const dropZoneTitle = dropZone?.querySelector('.drop-zone-title');
@@ -60,6 +61,51 @@ let merchantOpen = false;
 let currentPlayerRing = null;
 let currentPlayerGold = 0;
 let currentShopPiles = [];
+let dragonEquipped = false;
+let dragonUsedThisTurn = false;
+let fireballEquipped = false;
+let fireballUsedThisTurn = false;
+
+// -----------------------------
+// Stat Display Helpers
+// -----------------------------
+
+/**
+ * Check if player has a specific gear equipped.
+ * @param {Object} equipped - player.equipped object
+ * @param {string} gearId - gear ID to check
+ * @returns {boolean}
+ */
+function hasEquipped(equipped, gearId) {
+  if (!equipped) return false;
+  return Object.values(equipped).some(g => g?.id === gearId);
+}
+
+/**
+ * Get effective damage for display (base * gear modifiers).
+ * @param {Object} state - game state
+ * @returns {number}
+ */
+function getEffectiveDisplayDamage(state) {
+  let damage = state.player.baseDamage;
+  if (hasEquipped(state.player.equipped, 'power_glove')) {
+    damage *= 2;
+  }
+  return damage;
+}
+
+/**
+ * Get effective speed for display (base * gear modifiers).
+ * @param {Object} state - game state
+ * @returns {number}
+ */
+function getEffectiveDisplaySpeed(state) {
+  let speed = state.player.baseMovement;
+  if (hasEquipped(state.player.equipped, 'boots_of_speed')) {
+    speed *= 2;
+  }
+  return speed;
+}
 
 // -----------------------------
 // Drawer Toggle
@@ -469,7 +515,12 @@ uiBackdrop?.addEventListener('click', () => {
 });
 
 btnFireball?.addEventListener('click', () => {
+  if (!fireballEquipped || fireballUsedThisTurn) return;
   window.dispatchEvent(new CustomEvent('fireball-toggle'));
+});
+
+btnDragon?.addEventListener('click', () => {
+  window.dispatchEvent(new CustomEvent('dragon-toggle'));
 });
 
 // -----------------------------
@@ -516,11 +567,20 @@ function closeAllPanels() {
 }
 
 function updateAbilityButtonsVisibility() {
-  if (!btnFireball) return;
   const drawerOpen = !drawer.classList.contains('collapsed');
   const sheetOpen = !characterSheet.classList.contains('hidden');
-  const hide = drawerOpen || sheetOpen || merchantOpen;
-  btnFireball.classList.toggle('hidden', hide);
+  const hidePanels = drawerOpen || sheetOpen || merchantOpen;
+
+  if (btnFireball) {
+    const hideFireball = hidePanels || !fireballEquipped || fireballUsedThisTurn;
+    btnFireball.classList.toggle('hidden', hideFireball);
+  }
+
+  if (btnDragon) {
+    // Dragon button: hide if panels open, or if not equipped, or if used this turn
+    const hideDragon = hidePanels || !dragonEquipped || dragonUsedThisTurn;
+    btnDragon.classList.toggle('hidden', hideDragon);
+  }
 }
 
 function updateMerchantVisibility(playerRing) {
@@ -691,13 +751,26 @@ window.addEventListener('keydown', (e) => {
   }
 }, true); // Use capture to intercept before main.js
 
+// 'g' hotkey for dragon mount ability
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() !== 'g') return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+    return;
+  }
+  if (!dragonEquipped || dragonUsedThisTurn) return;
+  e.preventDefault();
+  window.dispatchEvent(new CustomEvent('dragon-toggle'));
+});
+
 window.addEventListener('state-changed', (e) => {
   const state = e.detail?.state;
   if (!state) return;
+
+  // Update stats with effective values (considering gear)
   if (statGold) statGold.textContent = state.player.gold;
-  if (statDamage) statDamage.textContent = state.player.baseDamage;
+  if (statDamage) statDamage.textContent = getEffectiveDisplayDamage(state);
   if (statRange) statRange.textContent = state.player.range;
-  if (statMovement) statMovement.textContent = state.player.baseMovement;
+  if (statMovement) statMovement.textContent = getEffectiveDisplaySpeed(state);
   if (merchantGoldDisplay) merchantGoldDisplay.textContent = state.player.gold;
 
   // Sync shop piles and player gold for merchant drag validation
@@ -714,13 +787,27 @@ window.addEventListener('state-changed', (e) => {
   if (state.player.inventory) {
     renderInventory(state.player.inventory);
   }
+
+  // Track dragon gear state for button visibility
+  dragonEquipped = hasEquipped(state.player.equipped, 'dragon');
+  dragonUsedThisTurn = state.player.gearUsedThisTurn?.dragon || false;
+  fireballEquipped = hasEquipped(state.player.equipped, 'fireball');
+  fireballUsedThisTurn = state.player.gearUsedThisTurn?.fireball || false;
+  updateAbilityButtonsVisibility();
 });
 
 window.addEventListener('fireball-aim-changed', (e) => {
   if (!btnFireball) return;
   const active = !!e.detail?.active;
   btnFireball.classList.toggle('active', active);
-  btnFireball.textContent = active ? 'Fireball: Aiming' : 'Aim Fireball';
+  btnFireball.textContent = active ? 'Fireball: Aiming' : 'F';
+});
+
+window.addEventListener('dragon-aim-changed', (e) => {
+  if (!btnDragon) return;
+  const active = !!e.detail?.active;
+  btnDragon.classList.toggle('active', active);
+  btnDragon.textContent = active ? 'Dragon: Select' : 'G';
 });
 
 window.addEventListener('hand-rendered', () => {

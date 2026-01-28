@@ -6,6 +6,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - (empty)
 
 ## Next
+- Fill out MVP_ASSET_LIST.md (asset requirements for Stage 7).
 - Test touch drag-to-move on mobile and map drag direction to the 6 path directions.
 - Add merchant card detail view (tap to read effect before buy), mobile-first.
 - Review MODULE_ALIGNMENT_AUDIT.md after Claude's module map feedback.
@@ -14,6 +15,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 
 ## Later
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.
+- Define a richer debug mode checklist (overlay toggles, hitboxes, state inspectors).
 - Update attack targeting to respect player.range (needed for archer range 3 and future classes).
 - Revisit enemy passing-player behavior during enemy movement (animation will show enemies traversing hexes even if they end elsewhere); decide if “pass-through” should also trigger loss or if only landing on player hex ends game.
 - Consider formal turn-phase state machine to avoid re-entrancy during animations (post-MVP).

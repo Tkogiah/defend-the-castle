@@ -178,3 +178,15 @@ Read when working on this module
 ## Future modules (not yet implemented)
 - audio/ — sound effects, music (event-driven).
 - persistence/ — save/load game state (serialization only).
+
+## debug/ (internal tool)
+Responsibility
+- Debug-only toggles and overlays.
+Inputs
+- Window/event hooks (e.g., hotkeys).
+Outputs
+- Debug overlay flags for render.
+Forbidden
+- Game rules, state mutation.
+Read when working on this module
+- /Users/tkogiah/ai-workspace/defend-the-castle/src/debug/index.js

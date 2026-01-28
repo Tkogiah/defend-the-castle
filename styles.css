@@ -118,6 +118,10 @@ body {
   top: 60px;
 }
 
+.top-right.dragon-btn {
+  top: 108px;
+}
+
 .bottom-right {
   position: fixed;
   bottom: 12px;
@@ -480,6 +484,21 @@ body {
 .ui-btn.fireball-btn.active {
   background: rgba(230, 70, 70, 0.95);
   border-color: rgba(255, 110, 110, 0.95);
+  color: #ffffff;
+}
+
+.ui-btn.dragon-btn {
+  background: rgba(60, 160, 60, 0.75);
+  border-color: rgba(60, 160, 60, 0.9);
+  color: #f4fff4;
+  border-radius: 999px;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+}
+
+.ui-btn.dragon-btn.active {
+  background: rgba(70, 200, 70, 0.95);
+  border-color: rgba(110, 255, 110, 0.95);
   color: #ffffff;
 }
 

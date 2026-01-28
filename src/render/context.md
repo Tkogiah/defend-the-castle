@@ -24,13 +24,18 @@ The `overlay` object enables optional visual overlays during rendering:
 {
   fireball: {
     centerHex: { q: number, r: number }  // Target hex for fireball AOE
+  },
+  dragon: {
+    active: boolean  // Whether dragon targeting mode is active
   }
 }
 ```
 
 **Fireball overlay**: When `overlay.fireball.centerHex` is provided, draws:
 - Red outlined hexes within range 3 of the center hex (AOE preview)
-- Red dot at the center hex (targeting indicator)
+
+**Dragon overlay**: When `overlay.dragon.active` is true, draws:
+- Purple filled/outlined hexes for valid adjacent hexes (not occupied by enemies)
 
 ### Animation Exports
 - `startPlayerAnimation(from, to, onComplete)` — animate player movement

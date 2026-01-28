@@ -61,11 +61,12 @@ const view = {
 let state = createInitialState(generateHexGrid());
 state = startPlayerTurn(state);
 subscribeToState(() => state);
-emitStateChanged();
 let enemyPhaseInProgress = false;
 let fireballAimActive = false;
 let fireballHoverHex = null;
+let dragonAimActive = false;
 registerDebugHotkeys(window);
+emitStateChanged();
 
 function withErrorBoundary(label, fn) {
   try {
@@ -82,6 +83,16 @@ function emitStateChanged() {
   updateMerchantVisibility(canShowMerchant);
   if (state.phase !== 'playerTurn') {
     closeMerchant();
+  }
+  // Cancel dragon aim if no longer available.
+  if (dragonAimActive) {
+    const equipped = Object.values(state.player.equipped || {}).some(
+      (g) => g?.id === 'dragon'
+    );
+    const used = !!state.player.gearUsedThisTurn?.dragon;
+    if (!equipped || used) {
+      setDragonAim(false);
+    }
   }
   window.dispatchEvent(new CustomEvent('state-changed', { detail: { state } }));
 }
@@ -106,13 +117,26 @@ function updateViewToFit(cssWidth, cssHeight) {
   view.panY = 0;
 }
 
+function isAnyPanelOpen() {
+  const drawer = document.getElementById('hand-drawer');
+  const sheet = document.getElementById('character-sheet');
+  const drawerOpen = drawer && !drawer.classList.contains('collapsed');
+  const sheetOpen = sheet && !sheet.classList.contains('hidden');
+  const merchantOpen = document.body.classList.contains('merchant-open');
+  return !!(drawerOpen || sheetOpen || merchantOpen);
+}
+
 function loop() {
   withErrorBoundary('renderFrame', () => {
+    if (dragonAimActive && isAnyPanelOpen()) {
+      setDragonAim(false);
+    }
     const debugOverlay = getDebugOverlay();
     renderFrame(ctx, canvas, state, view, {
       fireball: fireballAimActive && fireballHoverHex
         ? { centerHex: fireballHoverHex }
         : null,
+      dragon: dragonAimActive ? { active: true } : null,
       debugPlayer: debugOverlay.debugPlayer,
     });
   });
@@ -215,6 +239,15 @@ setPlayerBoundaryCallback((direction) => {
 
 function handleMoveToHex(target) {
   if (isAnimatingPlayer()) return;
+  if (dragonAimActive) {
+    const nextState = useAdjacentMove(state, target);
+    if (nextState !== state) {
+      state = nextState;
+      emitStateChanged();
+      setDragonAim(false);
+    }
+    return;
+  }
   if (fireballAimActive) {
     // In fireball aim mode: select target hex (don't cast yet)
     fireballHoverHex = target;
@@ -241,6 +274,9 @@ function handleMoveToHex(target) {
 }
 
 function handleMoveDirection(direction) {
+  if (direction && dragonAimActive) {
+    setDragonAim(false);
+  }
   setPlayerHeldDirection(direction);
   if (!direction && !isAnimatingPlayer()) {
     resetPlayerDrift();
@@ -255,6 +291,13 @@ function setFireballAim(active) {
   );
 }
 
+function setDragonAim(active) {
+  dragonAimActive = active;
+  window.dispatchEvent(
+    new CustomEvent('dragon-aim-changed', { detail: { active: dragonAimActive } })
+  );
+}
+
 /**
  * Handle fireball button/key action:
  * - If not in aim mode: enter aim mode
@@ -262,7 +305,17 @@ function setFireballAim(active) {
  * - If in aim mode without target: exit aim mode (cancel)
  */
 function handleFireballAction() {
+  const hasFireball = Object.values(state.player.equipped || {}).some(
+    (g) => g?.id === 'fireball'
+  );
+  const fireballUsed = !!state.player.gearUsedThisTurn?.fireball;
+  if (!hasFireball || fireballUsed) {
+    return;
+  }
   if (!fireballAimActive) {
+    if (dragonAimActive) {
+      setDragonAim(false);
+    }
     // Enter fireball aim mode
     setFireballAim(true);
   } else if (fireballHoverHex) {
@@ -280,6 +333,21 @@ function handleFireballAction() {
   }
 }
 
+/**
+ * Handle dragon button/key action:
+ * - Toggle aim mode on/off
+ */
+function handleDragonAction() {
+  if (!dragonAimActive) {
+    if (fireballAimActive) {
+      setFireballAim(false);
+    }
+    setDragonAim(true);
+  } else {
+    setDragonAim(false);
+  }
+}
+
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 const cleanupInput = setupInputControls(canvas, view, {
@@ -291,6 +359,9 @@ const cleanupInput = setupInputControls(canvas, view, {
     // Cancel fireball aim mode when tapping outside the board
     if (fireballAimActive) {
       setFireballAim(false);
+    }
+    if (dragonAimActive) {
+      setDragonAim(false);
     }
   },
 });
@@ -416,6 +487,12 @@ window.addEventListener('fireball-cast', (e) => {
 window.addEventListener('fireball-toggle', () => {
   withErrorBoundary('fireball-toggle', () => {
     handleFireballAction();
+  });
+});
+
+window.addEventListener('dragon-toggle', () => {
+  withErrorBoundary('dragon-toggle', () => {
+    handleDragonAction();
   });
 });
 

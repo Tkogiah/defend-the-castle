@@ -4,7 +4,7 @@
  */
 
 import { HEX_SIZE } from '../config/index.js';
-import { getSpiralLabel, getSpiralAxial, getHexesInRange } from '../hex/index.js';
+import { getSpiralLabel, getSpiralAxial, getHexesInRange, getNeighbors } from '../hex/index.js';
 import { axialToPixel } from './util.js';
 
 /**
@@ -106,6 +106,41 @@ export function drawFireballRange(ctx, hexGrid, centerPos, range) {
 
   for (const hex of hexesInRange) {
     const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
+    drawHexOutline(ctx, x, y, HEX_SIZE);
+  }
+}
+
+/**
+ * Draw dragon mount targeting overlay (purple mesh for adjacent hexes).
+ * Only shows valid hexes (on board, not occupied by enemies).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Map} hexGrid - the hex grid
+ * @param {{ q: number, r: number }} playerPos - player's current position
+ * @param {Array<{ position: { q: number, r: number } }>} enemies - enemy list
+ */
+export function drawDragonRange(ctx, hexGrid, playerPos, enemies) {
+  const neighbors = getNeighbors(playerPos.q, playerPos.r);
+
+  // Build set of enemy-occupied hex keys
+  const enemyHexes = new Set();
+  for (const enemy of enemies) {
+    if (enemy && enemy.position) {
+      enemyHexes.add(`${enemy.position.q},${enemy.position.r}`);
+    }
+  }
+
+  ctx.fillStyle = 'rgba(160, 80, 200, 0.35)'; // Purple, semi-transparent
+  ctx.strokeStyle = 'rgba(180, 100, 220, 0.8)'; // Purple outline
+  ctx.lineWidth = 2;
+
+  for (const hex of neighbors) {
+    const key = `${hex.q},${hex.r}`;
+    // Skip if not on board or occupied by enemy
+    if (!hexGrid.has(key)) continue;
+    if (enemyHexes.has(key)) continue;
+
+    const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
+    drawHexFill(ctx, x, y, HEX_SIZE);
     drawHexOutline(ctx, x, y, HEX_SIZE);
   }
 }
