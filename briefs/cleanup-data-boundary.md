@@ -12,7 +12,12 @@ Scope
 Data + core only. No render/input/ui changes.
 
 Goal
-Move data helpers (gear instance creation + random drop) out of data/ or document exception. Ensure core imports via src/data/index.js only.
+Enforce data-only boundary by moving gear helpers (instance creation + random drop) out of data/ into core/. Ensure core imports via src/data/index.js only.
+
+Constraints
+- data/ must remain static definitions only (no logic).
+- Follow allowed import graph (core → data, config; data → none).
+- No main.js changes.
 
 Expected output
 - Summary of changes

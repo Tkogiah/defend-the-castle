@@ -39,8 +39,8 @@ import {
   getOwnedGearIds,
 } from './state.js';
 import { getSpiralLabel, getSpiralAxial, axialDistance, getNeighbors } from '../hex/index.js';
-import { createCrystalCard, createMerchantCard } from '../data/cards.js';
-import { createGearInstance, getRandomGearDrop } from '../data/gear.js';
+import { createCrystalCard, createMerchantCard } from './cards.js';
+import { createGearInstance, getRandomGearDrop } from './gear.js';
 
 // -----------------------------
 // Deck Operations

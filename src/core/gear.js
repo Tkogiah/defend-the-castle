@@ -1,4 +1,4 @@
-import { GEAR_ITEMS } from '../data/gear.js';
+import { GEAR_ITEMS } from '../data/index.js';
 
 let gearInstanceCounter = 0;
 

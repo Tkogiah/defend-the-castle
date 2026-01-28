@@ -14,6 +14,11 @@ Core + hex only (Codex wires main.js). No render/input/ui changes.
 Goal
 Relocate pathing helpers (buildSpiralPath, resolveStepForDirection) and enemy-phase decisions out of main.js into core/ or hex/ as pure functions.
 
+Constraints
+- main.js changes are handled by Codex only.
+- Move logic into core/ or hex/ as pure helpers.
+- Follow allowed import graph (core → hex, data, config).
+
 Expected output
 - Summary of changes
 - Files touched

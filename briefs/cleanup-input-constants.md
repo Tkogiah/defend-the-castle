@@ -14,6 +14,10 @@ Input + config only.
 Goal
 Centralize camera constants (MIN_ZOOM, MAX_ZOOM, etc.) in config/ or document explicit exceptions.
 
+Constraints
+- Follow allowed import graph (input → config, hex only).
+- No main.js changes.
+
 Expected output
 - Summary of changes
 - Files touched

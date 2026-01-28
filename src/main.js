@@ -37,7 +37,7 @@ import {
   subscribeToState,
   updateMerchantVisibility,
   closeMerchant,
-} from './ui.js';
+} from './ui/index.js';
 import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y, FIT_PADDING } from './config/index.js';
 
 const canvas = document.getElementById('game-canvas');

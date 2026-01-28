@@ -15,6 +15,11 @@ UI module only. No core/render/input changes.
 Goal
 Normalize UI module layout (context.md + index.js). Ensure main.js imports UI from module entry.
 
+Constraints
+- UI is DOM-only; no game rules or canvas rendering.
+- Keep changes inside ui/ module (main.js wiring handled by Codex).
+- Follow allowed import graph (ui → data, config only).
+
 Expected output
 - Summary of changes
 - Files touched

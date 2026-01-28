@@ -9,13 +9,9 @@
  * Occupancy is tracked via player.position and enemies[].position, not stored in hex data.
  */
 
-import {
-  createStarterDeck,
-  createCrystalCard,
-  MERCHANT_CARDS,
-  SHOP_PILE_SIZE,
-} from '../data/cards.js';
-import { createGearInstance, getRandomGearDrop } from '../data/gear.js';
+import { MERCHANT_CARDS, SHOP_PILE_SIZE } from '../data/index.js';
+import { createGearInstance, getRandomGearDrop } from './gear.js';
+import { createStarterDeck, createCrystalCard } from './cards.js';
 
 // -----------------------------
 // Initial State Shape (MVP)

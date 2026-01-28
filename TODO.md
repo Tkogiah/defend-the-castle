@@ -13,6 +13,7 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Add merchant card detail view (tap to read effect before buy), mobile-first.
 - Review MODULE_ALIGNMENT_AUDIT.md after Claude's module map feedback.
 - Use MODULE_CLEANUP_TASKS.md to schedule module-by-module cleanup.
+- Fix boss defeat flow: next wave enemies should not all remain stacked on spawn hex.
 
 ## Later
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.

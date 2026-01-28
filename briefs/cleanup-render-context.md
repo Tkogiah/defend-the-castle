@@ -12,6 +12,9 @@ Render docs only.
 Goal
 Document overlay parameter to renderFrame and fireball overlay usage.
 
+Constraints
+- Docs only; no code changes.
+
 Expected output
 - Summary of edits
 - Files touched
