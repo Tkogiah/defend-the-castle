@@ -73,8 +73,8 @@ export function createInitialState(hexGrid = new Map()) {
         baseMovement: 0,
         baseDamage: 0,
       },
-      // Flag for Ice card: next attack freezes target
-      nextAttackFreezes: false,
+      // Ice card charges: number of upcoming attacks that freeze
+      nextAttackFreezes: 0,
 
       // Deck system (cards: { id, type, value })
       deck: createStarterDeck(),
@@ -182,7 +182,7 @@ export function resetPlayerTurnBonus(state) {
     player: {
       ...state.player,
       turnBonus: { range: 0, baseMovement: 0, baseDamage: 0 },
-      nextAttackFreezes: false,
+      nextAttackFreezes: 0,
     },
   };
 }

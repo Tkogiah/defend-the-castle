@@ -37,6 +37,19 @@ export function drawPlayer(ctx, pixelPos) {
 export function drawEnemies(ctx, enemies) {
   if (!Array.isArray(enemies)) return;
 
+  const getEnemyColors = (enemy, count = 1, isFrozen = false) => {
+    if (isFrozen) {
+      return { baseColor: '#f2f2f2', strokeColor: '#b8b8b8' };
+    }
+    if (enemy?.isBoss) {
+      return { baseColor: '#3a7bd5', strokeColor: '#0c1a33' };
+    }
+    if (count > 1) {
+      return { baseColor: '#d45163', strokeColor: '#2b0f14' };
+    }
+    return { baseColor: '#c24b5a', strokeColor: '#2b0f14' };
+  };
+
   const animatingEnemies = [];
   const staticEnemies = [];
 
@@ -55,8 +68,11 @@ export function drawEnemies(ctx, enemies) {
       ? enemy.visualPosition
       : axialToPixel(enemy.position.q, enemy.position.r, HEX_SIZE);
     const radius = enemy.isBoss ? HEX_SIZE * 0.5 : HEX_SIZE * 0.28;
-    const baseColor = enemy.isBoss ? '#3a7bd5' : '#c24b5a';
-    const strokeColor = enemy.isBoss ? '#0c1a33' : '#2b0f14';
+    const { baseColor, strokeColor } = getEnemyColors(
+      enemy,
+      1,
+      enemy.frozenTurns > 0
+    );
     drawCylinder(ctx, x, y, radius, ENTITY_HEIGHT, baseColor, strokeColor);
   }
 
@@ -79,6 +95,7 @@ export function drawEnemies(ctx, enemies) {
       entry.totalHp += enemy.hp;
       entry.totalMaxHp += enemy.maxHp;
       entry.isBoss = entry.isBoss || !!enemy.isBoss;
+      entry.isFrozen = entry.isFrozen || enemy.frozenTurns > 0;
     } else {
       buckets.set(key, {
         x,
@@ -87,14 +104,18 @@ export function drawEnemies(ctx, enemies) {
         totalHp: enemy.hp,
         totalMaxHp: enemy.maxHp,
         isBoss: !!enemy.isBoss,
+        isFrozen: enemy.frozenTurns > 0,
       });
     }
   }
 
-  for (const { x, y, count, totalHp, totalMaxHp, isBoss } of buckets.values()) {
+  for (const { x, y, count, totalHp, totalMaxHp, isBoss, isFrozen } of buckets.values()) {
     const radius = isBoss ? HEX_SIZE * 0.5 : count > 1 ? HEX_SIZE * 0.36 : HEX_SIZE * 0.28;
-    const baseColor = isBoss ? '#3a7bd5' : count > 1 ? '#d45163' : '#c24b5a';
-    const strokeColor = isBoss ? '#0c1a33' : '#2b0f14';
+    const { baseColor, strokeColor } = getEnemyColors(
+      { isBoss },
+      count,
+      isFrozen
+    );
 
     // Draw enemy cylinder
     drawCylinder(ctx, x, y, radius, ENTITY_HEIGHT, baseColor, strokeColor);

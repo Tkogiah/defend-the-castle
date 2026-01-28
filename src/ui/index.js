@@ -5,6 +5,7 @@
  */
 
 import { renderHand, getCardData, subscribeToState } from './hand.js';
+import { MERCHANT_CARDS } from '../data/index.js';
 
 // -----------------------------
 // DOM Elements
@@ -38,6 +39,13 @@ const merchantGoldDisplay = document.getElementById('merchant-gold-value');
 const merchantGrid = document.getElementById('merchant-grid');
 const btnMerchant = document.getElementById('btn-merchant');
 const btnCloseMerchant = document.getElementById('btn-close-merchant');
+const merchantDetailBackdrop = document.getElementById('merchant-detail-backdrop');
+const merchantDetail = document.getElementById('merchant-detail');
+const merchantDetailName = document.getElementById('merchant-detail-name');
+const merchantDetailDesc = document.getElementById('merchant-detail-desc');
+const merchantDetailCost = document.getElementById('merchant-detail-cost');
+const merchantDetailRemaining = document.getElementById('merchant-detail-remaining');
+const btnCloseMerchantDetail = document.getElementById('btn-close-merchant-detail');
 
 // Gear elements
 const gearSlotsContainer = document.getElementById('gear-slots');
@@ -56,6 +64,11 @@ let dragOffsetY = 0;
 let dragStartX = 0;
 let dragStartY = 0;
 const DRAG_THRESHOLD_PX = 6;
+let pendingMerchantSlot = null;
+let merchantDragStartX = 0;
+let merchantDragStartY = 0;
+let merchantDragStarted = false;
+const MERCHANT_DRAG_THRESHOLD = 6;
 const actionModeByCardId = new Map();
 let merchantOpen = false;
 let currentPlayerRing = null;
@@ -116,11 +129,13 @@ function closeHandDrawer() {
   cardDetail.classList.add('hidden');
   if (dropZoneTitle) dropZoneTitle.textContent = '';
   if (dropZoneDesc) dropZoneDesc.textContent = '';
+  btnHand?.classList.remove('hidden');
   updateAbilityButtonsVisibility();
 }
 
 function openHandDrawer() {
   drawer.classList.remove('collapsed');
+  btnHand?.classList.add('hidden');
   updateAbilityButtonsVisibility();
 }
 
@@ -147,6 +162,15 @@ btnHand?.addEventListener('click', () => {
   } else {
     closeHandDrawer();
   }
+});
+
+// Close drawer when clicking outside it
+document.addEventListener('click', (e) => {
+  if (drawer.classList.contains('collapsed')) return;
+  if (merchantOpen) return;
+  if (drawer.contains(e.target)) return;
+  if (btnHand?.contains(e.target)) return;
+  closeHandDrawer();
 });
 
 // -----------------------------
@@ -533,6 +557,7 @@ function openMerchant() {
   closeCharacterSheet();
   openHandDrawer();
   cardDetail.classList.add('hidden');
+  closeMerchantDetail();
   btnMerchant?.classList.add('hidden');
   merchantBackdrop?.classList.remove('hidden');
   merchantPanel?.classList.remove('hidden');
@@ -544,6 +569,7 @@ function openMerchant() {
 function closeMerchant() {
   if (!merchantOpen) return;
   merchantOpen = false;
+  closeMerchantDetail();
   merchantPanel?.classList.add('hidden');
   merchantBackdrop?.classList.add('hidden');
   document.body.classList.remove('merchant-open');
@@ -616,37 +642,50 @@ merchantBackdrop?.addEventListener('click', () => {
 merchantGrid?.addEventListener('mousedown', startMerchantDrag);
 merchantGrid?.addEventListener('touchstart', startMerchantDrag, { passive: false });
 
+function showMerchantDetail(cardType, cost, remaining) {
+  const card = MERCHANT_CARDS.find((c) => c.id === cardType);
+  if (!card) return;
+  if (merchantDetailName) merchantDetailName.textContent = card.name;
+  if (merchantDetailDesc) merchantDetailDesc.textContent = card.description || '';
+  if (merchantDetailCost) merchantDetailCost.textContent = `Cost: ${cost} gold`;
+  if (merchantDetailRemaining) {
+    merchantDetailRemaining.textContent = `${remaining} remaining`;
+  }
+  merchantDetailBackdrop?.classList.remove('hidden');
+  merchantDetail?.classList.remove('hidden');
+}
+
+function closeMerchantDetail() {
+  merchantDetail?.classList.add('hidden');
+  merchantDetailBackdrop?.classList.add('hidden');
+}
+
+btnCloseMerchantDetail?.addEventListener('click', () => {
+  closeMerchantDetail();
+});
+
+merchantDetailBackdrop?.addEventListener('click', () => {
+  closeMerchantDetail();
+});
+
 function startMerchantDrag(e) {
   const slot = e.target.closest('.merchant-slot');
   if (!slot || slot.classList.contains('sold-out')) return;
 
   const cardType = slot.dataset.cardType;
   const cost = parseInt(slot.dataset.cost, 10);
-  if (!cardType || currentPlayerGold < cost) return;
+  if (!cardType || Number.isNaN(cost)) return;
 
   e.preventDefault();
-  draggedMerchantSlot = slot;
-  slot.classList.add('dragging');
+  pendingMerchantSlot = slot;
+  merchantDragStarted = false;
 
   const touch = e.touches ? e.touches[0] : e;
+  merchantDragStartX = touch.clientX;
+  merchantDragStartY = touch.clientY;
   const rect = slot.getBoundingClientRect();
   dragOffsetX = touch.clientX - rect.left;
   dragOffsetY = touch.clientY - rect.top;
-
-  // Create drag ghost with same dimensions
-  const ghost = slot.cloneNode(true);
-  ghost.id = 'drag-ghost';
-  ghost.style.cssText = `
-    position: fixed;
-    left: ${rect.left}px;
-    top: ${rect.top}px;
-    width: ${rect.width}px;
-    height: ${rect.height}px;
-    pointer-events: none;
-    z-index: 300;
-    opacity: 0.9;
-  `;
-  document.body.appendChild(ghost);
 
   document.addEventListener('mousemove', onMerchantDrag);
   document.addEventListener('touchmove', onMerchantDrag, { passive: false });
@@ -655,13 +694,45 @@ function startMerchantDrag(e) {
 }
 
 function onMerchantDrag(e) {
-  if (!draggedMerchantSlot) return;
+  if (!pendingMerchantSlot) return;
   e.preventDefault();
+
+  const touch = e.touches ? e.touches[0] : e;
+  const dx = touch.clientX - merchantDragStartX;
+  const dy = touch.clientY - merchantDragStartY;
+
+  if (!merchantDragStarted && Math.hypot(dx, dy) >= MERCHANT_DRAG_THRESHOLD) {
+    const cost = parseInt(pendingMerchantSlot.dataset.cost, 10);
+    if (currentPlayerGold < cost) {
+      return;
+    }
+
+    merchantDragStarted = true;
+    draggedMerchantSlot = pendingMerchantSlot;
+    draggedMerchantSlot.classList.add('dragging');
+
+    // Create drag ghost with same dimensions
+    const rect = pendingMerchantSlot.getBoundingClientRect();
+    const ghost = pendingMerchantSlot.cloneNode(true);
+    ghost.id = 'drag-ghost';
+    ghost.style.cssText = `
+      position: fixed;
+      left: ${rect.left}px;
+      top: ${rect.top}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      pointer-events: none;
+      z-index: 300;
+      opacity: 0.9;
+    `;
+    document.body.appendChild(ghost);
+  }
+
+  if (!merchantDragStarted) return;
 
   const ghost = document.getElementById('drag-ghost');
   if (!ghost) return;
 
-  const touch = e.touches ? e.touches[0] : e;
   ghost.style.left = `${touch.clientX - dragOffsetX}px`;
   ghost.style.top = `${touch.clientY - dragOffsetY}px`;
 
@@ -678,14 +749,30 @@ function onMerchantDrag(e) {
 }
 
 function endMerchantDrag(e) {
-  if (!draggedMerchantSlot) return;
+  const slot = pendingMerchantSlot;
+  const wasDragging = merchantDragStarted;
 
   const ghost = document.getElementById('drag-ghost');
-  const touch = e.changedTouches ? e.changedTouches[0] : e;
-  const cardType = draggedMerchantSlot.dataset.cardType;
-  const cost = parseInt(draggedMerchantSlot.dataset.cost, 10);
+  // Cleanup listeners
+  document.removeEventListener('mousemove', onMerchantDrag);
+  document.removeEventListener('touchmove', onMerchantDrag);
+  document.removeEventListener('mouseup', endMerchantDrag);
+  document.removeEventListener('touchend', endMerchantDrag);
 
-  let purchased = false;
+  if (!slot) return;
+  const cardType = slot.dataset.cardType;
+  const cost = parseInt(slot.dataset.cost, 10);
+
+  if (!wasDragging) {
+    const remaining =
+      currentShopPiles.find((p) => p.cardType === cardType)?.remaining || 0;
+    showMerchantDetail(cardType, cost, remaining);
+    pendingMerchantSlot = null;
+    merchantDragStarted = false;
+    return;
+  }
+
+  const touch = e.changedTouches ? e.changedTouches[0] : e;
 
   // Check if dropped on hand drawer
   if (drawer) {
@@ -697,7 +784,6 @@ function endMerchantDrag(e) {
       touch.clientY <= rect.bottom;
 
     if (inZone && currentPlayerGold >= cost) {
-      purchased = true;
       // Emit merchant-buy event for main.js to handle
       window.dispatchEvent(
         new CustomEvent('merchant-buy', {
@@ -709,19 +795,15 @@ function endMerchantDrag(e) {
   }
 
   // Snap back (always remove dragging class)
-  draggedMerchantSlot.classList.remove('dragging');
+  draggedMerchantSlot?.classList.remove('dragging');
   draggedMerchantSlot = null;
+  pendingMerchantSlot = null;
+  merchantDragStarted = false;
 
   // Remove ghost
   if (ghost) {
     ghost.remove();
   }
-
-  // Cleanup listeners
-  document.removeEventListener('mousemove', onMerchantDrag);
-  document.removeEventListener('touchmove', onMerchantDrag);
-  document.removeEventListener('mouseup', endMerchantDrag);
-  document.removeEventListener('touchend', endMerchantDrag);
 }
 
 // -----------------------------

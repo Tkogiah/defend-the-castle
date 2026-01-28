@@ -836,6 +836,97 @@ body {
   letter-spacing: 0.2em;
 }
 
+/* Merchant card detail (bottom sheet) */
+.merchant-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 400;
+  transition: opacity 0.2s ease;
+}
+
+.merchant-detail-backdrop.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.merchant-detail {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f5ecd7 0%, #e8dcc4 100%);
+  border-top: 2px solid rgba(110, 88, 48, 0.5);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  z-index: 401;
+  transform: translateY(0);
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.merchant-detail.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.merchant-detail-content {
+  padding: 1rem 1.25rem 1.5rem;
+  position: relative;
+}
+
+.merchant-detail-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: rgba(110, 88, 48, 0.15);
+  border: 1px solid rgba(110, 88, 48, 0.3);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+  color: #5a4522;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.merchant-detail-close:active {
+  background: rgba(110, 88, 48, 0.25);
+}
+
+.merchant-detail-name {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #4a3818;
+  font-weight: 600;
+}
+
+.merchant-detail-desc {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #5a4522;
+  line-height: 1.4;
+}
+
+.merchant-detail-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.merchant-detail-cost {
+  color: #b88b2a;
+  font-weight: 600;
+}
+
+.merchant-detail-remaining {
+  color: #6a542a;
+}
+
 @media (max-width: 700px) {
   .merchant-panel {
     width: 90vw;

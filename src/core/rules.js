@@ -245,7 +245,10 @@ export function playMerchantCard(state, cardId) {
     case 'ice':
       // +1 attack point and next attack freezes target
       newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 1);
-      newState = setNextAttackFreezes(newState, true);
+      newState = setNextAttackFreezes(
+        newState,
+        (newState.player.nextAttackFreezes || 0) + 1
+      );
       break;
 
     case 'move_twice':
@@ -321,9 +324,12 @@ export function attackEnemy(state, enemyId) {
   let newState = damageEnemy(state, enemyId, totalDamage);
 
   // Handle Ice card freeze effect
-  if (state.player.nextAttackFreezes) {
-    newState = setEnemyFrozen(newState, enemyId, 1);
-    newState = setNextAttackFreezes(newState, false);
+  const freezeCharges = state.player.nextAttackFreezes || 0;
+  if (freezeCharges > 0) {
+    const refreshed = newState.enemies.find((e) => e.id === enemyId);
+    const existingFrozen = refreshed?.frozenTurns || 0;
+    newState = setEnemyFrozen(newState, enemyId, existingFrozen + 1);
+    newState = setNextAttackFreezes(newState, freezeCharges - 1);
   }
 
   // Award crystal or gold based on King's Purse gear

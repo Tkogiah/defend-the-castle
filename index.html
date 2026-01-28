@@ -58,7 +58,9 @@
       <div id="character-sheet" class="character-sheet hidden">
         <div class="sheet-header">
           <h2>Character Sheet</h2>
-          <button id="btn-close-sheet" class="ui-btn sheet-close">✕</button>
+          <!-- I am hiding the following button because removing it breaks the code. need to fix later -->
+          <button style="visibility: hidden;" id="btn-close-sheet" class="ui-btn sheet-close">x</button>
+          <!-- ************************ -->
         </div>
         <div class="sheet-content">
           <div class="sheet-section">
@@ -97,12 +99,26 @@
             <div class="merchant-portrait">Merchant</div>
           </div>
           <div class="sheet-section merchant-right">
-            <div class="merchant-grid" id="merchant-grid">
-              <!-- Slots rendered by UI -->
-            </div>
+          <div class="merchant-grid" id="merchant-grid">
+            <!-- Slots rendered by UI -->
           </div>
         </div>
       </div>
+
+      <!-- Merchant card detail (bottom sheet) -->
+      <div id="merchant-detail-backdrop" class="merchant-detail-backdrop hidden"></div>
+      <div id="merchant-detail" class="merchant-detail hidden">
+        <div class="merchant-detail-content">
+          <button id="btn-close-merchant-detail" class="merchant-detail-close">✕</button>
+          <h3 id="merchant-detail-name" class="merchant-detail-name"></h3>
+          <p id="merchant-detail-desc" class="merchant-detail-desc"></p>
+          <div class="merchant-detail-meta">
+            <span id="merchant-detail-cost" class="merchant-detail-cost"></span>
+            <span id="merchant-detail-remaining" class="merchant-detail-remaining"></span>
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
 
     <script type="module" src="./src/main.js"></script>
