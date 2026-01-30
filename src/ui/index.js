@@ -851,7 +851,10 @@ window.addEventListener('state-changed', (e) => {
   // Update stats with effective values (considering gear)
   if (statGold) statGold.textContent = state.player.gold;
   if (statDamage) statDamage.textContent = getEffectiveDisplayDamage(state);
-  if (statRange) statRange.textContent = state.player.range;
+  if (statRange) {
+    const bonusRange = state.player.turnBonus?.range || 0;
+    statRange.textContent = state.player.range + bonusRange;
+  }
   if (statMovement) statMovement.textContent = getEffectiveDisplaySpeed(state);
   if (merchantGoldDisplay) merchantGoldDisplay.textContent = state.player.gold;
 
