@@ -12,9 +12,9 @@ export const GEAR_ITEMS = [
     effect: 'adjacentMove', // Move to any adjacent hex once per turn (ignores spiral)
   },
   {
-    id: 'boots_of_speed',
+    id: 'sonic_boots',
     type: 'foot',
-    name: 'Boots of Speed',
+    name: 'Sonic Boots',
     description: 'Magical boots that make you twice as fast.',
     effect: 'doubleSpeed', // Doubles player base speed
   },

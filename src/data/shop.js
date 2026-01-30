@@ -8,7 +8,7 @@ export const SHOP_PILES = [
   { cardType: 'multitask', pileLimit: 10 },
   { cardType: 'second_wind', pileLimit: 10 },
   { cardType: 'reach', pileLimit: 10 },
-  { cardType: 'boots_of_speed', pileLimit: 10 },
+  { cardType: 'sonic_boots', pileLimit: 10 },
   { cardType: 'sharpen', pileLimit: 10 },
   { cardType: 'ice', pileLimit: 10 },
   { cardType: 'move_twice', pileLimit: 10 },

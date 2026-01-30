@@ -72,6 +72,7 @@ export function createInitialState(hexGrid = new Map()) {
         range: 0,
         baseMovement: 0,
         baseDamage: 0,
+        whirlwindStacks: 0,
       },
       // Ice card charges: number of upcoming attacks that freeze
       nextAttackFreezes: 0,
@@ -181,7 +182,7 @@ export function resetPlayerTurnBonus(state) {
     ...state,
     player: {
       ...state.player,
-      turnBonus: { range: 0, baseMovement: 0, baseDamage: 0 },
+      turnBonus: { range: 0, baseMovement: 0, baseDamage: 0, whirlwindStacks: 0 },
       nextAttackFreezes: 0,
     },
   };

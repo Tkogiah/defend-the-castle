@@ -25,6 +25,7 @@ import {
   setPlayerHeldDirection,
   setPlayerBoundaryCallback,
   resetPlayerDrift,
+  setPlayerLogicalHex,
 } from './animation.js';
 
 // Re-export animation API for main.js
@@ -47,6 +48,9 @@ export {
  * @param {{ panX: number, panY: number, zoom: number }} view - view state
  */
 export function renderFrame(ctx, canvas, state, view, overlay = null) {
+  // Set logical hex before animations so keyboard snaps use current position
+  setPlayerLogicalHex(state.player.position);
+
   // Update animations (uses internal time tracking)
   updateAnimations();
 

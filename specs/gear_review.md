@@ -99,7 +99,7 @@ Healing the castle presumes a system not in MVP and reduces clarity right now.
 
 ## Foot (9)
 
-1) **Boots of Speed** — *9.5/10*  
+1) **Sonic Boots** — *9.5/10*  
 Double base movement is a massive power spike and universally useful.
 
 2) **Featherstep** — *9/10*  

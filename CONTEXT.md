@@ -69,6 +69,8 @@ Use this checklist on session start or after reload.
 - Architecture & wiring: each folder contains context.md (intent + rules) and index.js (wiring + public exports)
 - Architecture & wiring: refactor workflow = update folder context first, then code, then update wiring in main.js
 - Cards: draw uses discard reshuffle whenever the deck is empty (including mid-draw from effects)
+- Cards: all merchant cards can be used for their effect OR as an action-mode card to grant +1 attack point or +1 move point
+- Cards: crystal cards can be trashed outside hex 0 for 0 gold (no conversion required)
 
 ## Recent Updates
 - 2026-01-21: Set initial stack and backend direction.
@@ -78,3 +80,4 @@ Use this checklist on session start or after reload.
 - 2026-01-23: Clarified assistant role as coordinator/reviewer/brief-writer and codified commit/push workflow.
 - 2026-01-23: Added explicit architecture/wiring conventions (main.js composition root, folder context + index.js).
 - 2026-01-30: Updated MVP scope to 10 waves with HP scaling (basic = wave×10, boss = wave×100, final boss 1000).
+- 2026-01-30: Added merchant action-mode rule and crystal trash rule (no gold) for deck-building flexibility.

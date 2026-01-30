@@ -228,7 +228,7 @@ export function playMerchantCard(state, cardId) {
       });
       break;
 
-    case 'boots_of_speed':
+    case 'sonic_boots':
       // +5 base movement for this turn
       newState = setPlayerTurnBonus(newState, {
         baseMovement: (newState.player.turnBonus?.baseMovement || 0) + 5,
@@ -265,6 +265,13 @@ export function playMerchantCard(state, cardId) {
     case 'triple_attack':
       // +3 attack points
       newState = setPlayerAttackPoints(newState, newState.player.attackPoints + 3);
+      break;
+
+    case 'whirlwind':
+      // Stackable: first activates AoE, each additional adds +1 AoE bonus damage
+      newState = setPlayerTurnBonus(newState, {
+        whirlwindStacks: (newState.player.turnBonus.whirlwindStacks || 0) + 1,
+      });
       break;
 
     default:
@@ -404,6 +411,29 @@ export function tryAttackAtHex(state, targetPos) {
 
   // Attack the enemy
   newState = attackEnemy(newState, enemyAtTarget.id);
+
+  // Whirlwind AoE: hit all other enemies within range 1 of player hex
+  const whirlwindStacks = newState.player.turnBonus.whirlwindStacks || 0;
+  if (whirlwindStacks >= 1) {
+    const { q: pq2, r: pr2 } = state.player.position;
+    const aoeBonusDamage = whirlwindStacks - 1;
+    // Snapshot enemy IDs to avoid issues if boss dies mid-loop
+    const aoeTargetIds = state.enemies
+      .filter((e) => {
+        if (e.id === enemyAtTarget.id) return false;
+        return axialDistance(pq2, pr2, e.position.q, e.position.r) <= 1;
+      })
+      .map((e) => e.id);
+
+    for (const id of aoeTargetIds) {
+      // Skip if enemy was already removed (e.g. boss death cascade)
+      if (!newState.enemies.find((e) => e.id === id)) continue;
+      if (aoeBonusDamage > 0) {
+        newState = damageEnemy(newState, id, aoeBonusDamage);
+      }
+      newState = attackEnemy(newState, id);
+    }
+  }
 
   return newState;
 }
@@ -799,7 +829,7 @@ export function getEffectiveSpeed(state) {
   const bonusSpeed = state.player.turnBonus?.baseMovement || 0;
 
   // Boots of Speed doubles base speed
-  if (hasEquippedGear(state, 'boots_of_speed')) {
+  if (hasEquippedGear(state, 'sonic_boots')) {
     baseSpeed *= 2;
   }
 

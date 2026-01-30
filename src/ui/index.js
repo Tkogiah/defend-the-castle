@@ -114,7 +114,7 @@ function getEffectiveDisplayDamage(state) {
  */
 function getEffectiveDisplaySpeed(state) {
   let speed = state.player.baseMovement;
-  if (hasEquipped(state.player.equipped, 'boots_of_speed')) {
+  if (hasEquipped(state.player.equipped, 'sonic_boots')) {
     speed *= 2;
   }
   return speed;

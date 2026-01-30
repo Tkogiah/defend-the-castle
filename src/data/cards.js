@@ -45,7 +45,7 @@ export const MERCHANT_CARDS = [
     description: '+1 range for this round.',
   },
   {
-    id: 'boots_of_speed',
+    id: 'sonic_boots',
     type: 'merchant',
     name: 'Boots of Speed',
     cost: 10,
@@ -78,6 +78,13 @@ export const MERCHANT_CARDS = [
     name: 'Triple Attack',
     cost: 15,
     description: 'Attack three times.',
+  },
+  {
+    id: 'whirlwind',
+    type: 'merchant',
+    name: 'Whirlwind',
+    cost: 15,
+    description: 'Until end of turn, spending an attack point also hits all enemies within range 1 of your hex. Additional copies add +1 AoE damage.',
   },
 ];
 

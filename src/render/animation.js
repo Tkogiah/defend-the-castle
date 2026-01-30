@@ -9,12 +9,11 @@ import { HEX_SIZE } from '../config/index.js';
 import { axialToPixel } from './util.js';
 
 // Animation timing constants
-const PLAYER_SNAP_DURATION = 143;     // ms for snap to new hex center (≈70% speed)
 const ENEMY_MOVE_DURATION = 120;      // ms per hex
 const ENEMY_STAGGER_DELAY = 80;       // ms between enemy animation starts
 
 // Player drift constants
-const PLAYER_DRIFT_SPEED = HEX_SIZE * 3.5;  // pixels per second
+const PLAYER_DRIFT_SPEED = HEX_SIZE * 5;  // pixels per second
 const HEX_BOUNDARY_THRESHOLD = HEX_SIZE * 1;  // distance from center to trigger boundary
 
 // Direction vectors for hex movement (pointy-top)
@@ -46,8 +45,20 @@ let nextEnemyIndex = 0;
 let enemyFrozenPositions = new Map();   // Map<enemyId, { q, r }>
 let enemyFrozenClearAt = null;
 
+// Current logical hex (set by render loop before updateAnimations)
+let currentLogicalHex = { q: 0, r: 0 };
+
 // Callback for when player crosses hex boundary
 let onPlayerBoundaryCross = null;
+
+/**
+ * Set the player's current logical hex position.
+ * Must be called before updateAnimations() each frame.
+ * @param {{ q: number, r: number }} hex
+ */
+export function setPlayerLogicalHex(hex) {
+  currentLogicalHex = hex;
+}
 
 /**
  * Set callback for when player crosses a hex boundary.
@@ -74,12 +85,28 @@ export function setPlayerHeldDirection(direction) {
  * @param {function(): void} [onComplete] - callback when snap finishes
  */
 function startPlayerSnapAnimation(toHex, onComplete = null, fromHex = null) {
+  // Compute exact pixel distance for duration
+  const toPixel = axialToPixel(toHex.q, toHex.r, HEX_SIZE);
+  let distance;
+  if (fromHex) {
+    // Click-to-move: center to center
+    const fromPixel = axialToPixel(fromHex.q, fromHex.r, HEX_SIZE);
+    distance = Math.hypot(toPixel.x - fromPixel.x, toPixel.y - fromPixel.y);
+  } else {
+    // Keyboard snap: current position (center + drift) to target center
+    const fromPixel = axialToPixel(currentLogicalHex.q, currentLogicalHex.r, HEX_SIZE);
+    const fromX = fromPixel.x + playerDrift.x;
+    const fromY = fromPixel.y + playerDrift.y;
+    distance = Math.hypot(toPixel.x - fromX, toPixel.y - fromY);
+  }
+  const duration = Math.max((distance / PLAYER_DRIFT_SPEED) * 1000, 16);
+
   playerSnapAnim = {
     fromOffset: { ...playerDrift },
     fromHex: fromHex ? { ...fromHex } : null,
     toHex: { ...toHex },
     progress: 0,
-    duration: PLAYER_SNAP_DURATION,
+    duration,
     onComplete,
     completed: false,
     completedAt: null,
