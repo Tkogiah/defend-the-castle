@@ -49,4 +49,6 @@ Boss:
 
 ## 6) Sound
 - SFX: move, attack, hit, card play, enemy death, boss death, UI click — any others?
+  - Answer: yes, include the default list.
 - Music: 1 loop — what vibe? (dark fantasy, chill tavern, epic battle)
+  - Answer: two loops — dark fantasy (default) + chill tavern (merchant open).
