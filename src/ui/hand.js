@@ -29,6 +29,8 @@ export function createCardElement(card) {
   el.dataset.cardDesc = card.description || '';
   if (card.type === 'action') {
     el.dataset.actionMode = 'movement';
+  } else if (card.type === 'merchant') {
+    el.dataset.actionMode = 'effect';
   }
   if (typeof card.value !== 'undefined') {
     el.dataset.cardValue = card.value;
@@ -46,6 +48,11 @@ export function createCardElement(card) {
     const mode = document.createElement('span');
     mode.className = 'card-mode';
     mode.textContent = 'Move';
+    el.appendChild(mode);
+  } else if (card.type === 'merchant') {
+    const mode = document.createElement('span');
+    mode.className = 'card-mode';
+    mode.textContent = 'Effect';
     el.appendChild(mode);
   }
 

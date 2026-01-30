@@ -201,8 +201,22 @@ function showCardDetail(slot) {
       dropZoneTitle.textContent = modeLabel;
       dropZoneDesc.textContent =
         modeLabel === 'Attack'
-          ? 'Grants +1 attack.'
-          : 'Grants +1 movement.';
+          ? 'Grants +1 attack point.'
+          : 'Grants +1 move point.';
+    } else if (cardData.type === 'merchant') {
+      if (cardData.actionMode === 'attack') {
+        dropZoneTitle.textContent = 'Attack';
+        dropZoneDesc.textContent = 'Grants +1 attack point.';
+      } else if (cardData.actionMode === 'movement') {
+        dropZoneTitle.textContent = 'Move';
+        dropZoneDesc.textContent = 'Grants +1 move point.';
+      } else {
+        dropZoneTitle.textContent = cardData.name;
+        dropZoneDesc.textContent = cardData.description || '';
+      }
+    } else if (cardData.type === 'crystal') {
+      dropZoneTitle.textContent = 'Trash';
+      dropZoneDesc.textContent = 'Remove permanently. No gold.';
     } else {
       dropZoneTitle.textContent = cardData.name;
       dropZoneDesc.textContent = cardData.description || '';
@@ -216,27 +230,43 @@ function showCardDetail(slot) {
 
 function toggleActionMode(slot) {
   const cardData = getCardData(slot);
-  if (!cardData || cardData.type !== 'action') return;
-  const nextMode = cardData.actionMode === 'attack' ? 'movement' : 'attack';
+  if (!cardData) return;
+
+  let nextMode;
+  if (cardData.type === 'action') {
+    // 2-state: movement ↔ attack
+    nextMode = cardData.actionMode === 'attack' ? 'movement' : 'attack';
+  } else if (cardData.type === 'merchant') {
+    // 3-state: effect → attack → movement → effect
+    const cycle = { effect: 'attack', attack: 'movement', movement: 'effect' };
+    nextMode = cycle[cardData.actionMode] || 'effect';
+  } else {
+    return;
+  }
+
   slot.dataset.actionMode = nextMode;
   actionModeByCardId.set(cardData.id, nextMode);
   const modeEl = slot.querySelector('.card-mode');
   if (modeEl) {
-    modeEl.textContent = nextMode === 'attack' ? 'Attack' : 'Move';
+    const labels = { attack: 'Attack', movement: 'Move', effect: 'Effect' };
+    modeEl.textContent = labels[nextMode] || nextMode;
   }
 }
 
 function syncActionModes() {
   if (!handCards) return;
-  const actionSlots = handCards.querySelectorAll('.card-slot[data-card-type="action"]');
-  actionSlots.forEach((slot) => {
+  const slots = handCards.querySelectorAll('.card-slot[data-card-type="action"], .card-slot[data-card-type="merchant"]');
+  slots.forEach((slot) => {
     const cardData = getCardData(slot);
     if (!cardData) return;
-    const mode = actionModeByCardId.get(cardData.id) || 'movement';
+    const defaults = { action: 'movement', merchant: 'effect' };
+    const defaultMode = defaults[cardData.type] || 'movement';
+    const mode = actionModeByCardId.get(cardData.id) || defaultMode;
     slot.dataset.actionMode = mode;
     const modeEl = slot.querySelector('.card-mode');
     if (modeEl) {
-      modeEl.textContent = mode === 'attack' ? 'Attack' : 'Move';
+      const labels = { attack: 'Attack', movement: 'Move', effect: 'Effect' };
+      modeEl.textContent = labels[mode] || defaultMode;
     }
   });
 }
@@ -301,18 +331,8 @@ function onDrag(e) {
     pendingDragCard = null;
     draggedCard.classList.add('dragging');
 
-    // Update drop zone with card info
-    const dragCardData = getCardData(draggedCard);
-    if (dragCardData && dropZoneTitle && dropZoneDesc) {
-      if (dragCardData.type === 'action') {
-        const modeLabel = dragCardData.actionMode === 'attack' ? 'Attack' : 'Move';
-        dropZoneTitle.textContent = modeLabel;
-        dropZoneDesc.textContent = modeLabel === 'Attack' ? 'Grants +1 attack.' : 'Grants +1 movement.';
-      } else {
-        dropZoneTitle.textContent = dragCardData.name;
-        dropZoneDesc.textContent = dragCardData.description || '';
-      }
-    }
+    // Update drop zone with card info (reuse showCardDetail logic)
+    showCardDetail(draggedCard);
 
     const rect = draggedCard.getBoundingClientRect();
     // Create drag ghost
@@ -418,36 +438,6 @@ function endDrag(e) {
     merchantDropZone.classList.remove('drag-over', 'drag-active');
   }
 
-  // Fallback: drop crystal on play mat at center hex (ring 0)
-  if (!soldToMerchant && cardData?.type === 'crystal' && currentPlayerRing === 0 && gameCanvas) {
-    const rect = gameCanvas.getBoundingClientRect();
-    const inCanvas =
-      touch.clientX >= rect.left &&
-      touch.clientX <= rect.right &&
-      touch.clientY >= rect.top &&
-      touch.clientY <= rect.bottom;
-    if (inCanvas) {
-      soldToMerchant = true;
-      draggedCard.classList.add('played');
-      draggedCard.classList.remove('dragging');
-      window.dispatchEvent(
-        new CustomEvent('crystal-sold', {
-          detail: {
-            cardId: cardData.id,
-            value: Number.isFinite(cardData.value)
-              ? cardData.value
-              : parseInt(cardData.name.match(/\\d/)?.[0]) || 1,
-          },
-        })
-      );
-      const cardToRemove = draggedCard;
-      setTimeout(() => {
-        cardToRemove.remove();
-      }, 500);
-      draggedCard = null;
-    }
-  }
-
   // Check if dropped on play card zone (any card type when merchant not open)
   let droppedOnPlayZone = false;
   if (!soldToMerchant && !merchantOpen && dropZone) {
@@ -467,12 +457,18 @@ function endDrag(e) {
     cardDetail.classList.add('hidden');
 
     // Emit card-played event for main.js to handle
+    // action is 'attack'|'movement' for action cards,
+    // 'effect'|'attack'|'movement' for merchant cards,
+    // 'trash' for crystal cards in trash mode
+    const action =
+      cardData.type === 'action' || cardData.type === 'merchant'
+        ? cardData.actionMode
+        : cardData.type === 'crystal'
+          ? 'trash'
+          : undefined;
     window.dispatchEvent(
       new CustomEvent('card-played', {
-        detail: {
-          cardId: cardData.id,
-          action: cardData.type === 'action' ? cardData.actionMode : undefined,
-        },
+        detail: { cardId: cardData.id, action },
       })
     );
 

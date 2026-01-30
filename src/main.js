@@ -15,6 +15,7 @@ import {
   checkPlayerKnockout,
   endEnemyTurn,
   playMerchantCard,
+  trashCrystalCard,
   updateWave,
   equipGear,
   unequipGear,
@@ -404,7 +405,15 @@ window.addEventListener('card-played', (e) => {
       if (!action) return;
       state = playActionCard(state, cardId, action);
     } else if (card.type === 'merchant') {
-      state = playMerchantCard(state, cardId);
+      if (action === 'attack' || action === 'movement') {
+        state = playActionCard(state, cardId, action);
+      } else {
+        state = playMerchantCard(state, cardId);
+      }
+    } else if (card.type === 'crystal') {
+      if (action === 'trash') {
+        state = trashCrystalCard(state, cardId);
+      }
     } else {
       return;
     }

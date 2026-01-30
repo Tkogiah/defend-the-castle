@@ -790,51 +790,28 @@ body {
 
 .merchant-drop {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 65%;
-  border: 2px dashed rgba(110, 88, 48, 0.5);
-  border-radius: 10px;
-  padding: 0.75rem;
-  color: #5a4522;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  z-index: 2;
-  opacity: 0.2;
+  inset: 0;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  display: block;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0;
 }
 
 .merchant-drop.drag-active {
-  opacity: 1;
-  box-shadow: 0 0 18px rgba(217, 184, 108, 0.6);
+  pointer-events: auto;
 }
 
 .merchant-drop.drag-over {
-  border-color: #4aa36b;
   background: rgba(74, 163, 107, 0.12);
 }
 
 .merchant-drop.drag-over::after {
-  content: "SELL";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #b88b2a;
-  text-shadow: 0 0 12px rgba(217, 184, 108, 0.8);
+  content: none;
 }
 
-.merchant-sell {
-  font-size: 0.7rem;
-  color: #6a542a;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-}
 
 /* Merchant card detail (bottom sheet) */
 .merchant-detail-backdrop {

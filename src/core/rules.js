@@ -162,7 +162,7 @@ export function playActionCard(state, cardId, choice) {
   // choice: 'attack' | 'movement'
   // Stub: removes card from hand, adds to discard
   const card = state.player.hand.find((c) => c.id === cardId);
-  if (!card || card.type !== 'action') return state;
+  if (!card || (card.type !== 'action' && card.type !== 'merchant')) return state;
   if (choice !== 'attack' && choice !== 'movement') return state;
 
   let newState = removeCardFromHand(state, cardId);
@@ -436,6 +436,23 @@ export function tryAttackAtHex(state, targetPos) {
   }
 
   return newState;
+}
+
+// -----------------------------
+// Crystal Trash
+// -----------------------------
+
+/**
+ * Trash a crystal card from hand permanently. No gold, no discard.
+ * Available at any hex.
+ * @param {Object} state - current game state
+ * @param {string} cardId - unique instance ID of the crystal card
+ * @returns {Object} new state (unchanged if invalid)
+ */
+export function trashCrystalCard(state, cardId) {
+  const card = state.player.hand.find((c) => c.id === cardId);
+  if (!card || card.type !== 'crystal') return state;
+  return removeCardFromHand(state, cardId);
 }
 
 // -----------------------------
