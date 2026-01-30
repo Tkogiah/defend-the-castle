@@ -77,7 +77,9 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
 
   // Attack range overlay (green outlines)
   if (state.player.attackPoints > 0) {
-    drawAttackRange(ctx, state.hexGrid, state.player.position, state.player.range);
+    const bonusRange = state.player.turnBonus?.range || 0;
+    const effectiveRange = state.player.range + bonusRange;
+    drawAttackRange(ctx, state.hexGrid, state.player.position, effectiveRange);
   }
 
   // Fireball targeting overlay (red dashed outlines)
