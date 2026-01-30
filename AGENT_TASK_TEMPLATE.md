@@ -21,9 +21,10 @@
 - 
 
 ## Outputs Expected
-- Summary of changes
+- Summary of changes (required in final response)
 - Files touched
 - Open questions
+- Risks / caveats (if any)
 
 ## Decision Required (if any)
 - 

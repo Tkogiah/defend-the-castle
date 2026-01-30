@@ -3,7 +3,7 @@
 Rating scale: 1–10 (10 = strongest/most desirable). Ordered best → worst.
 
 1) **Whirlwind** — *9.5/10*  
-**Confirmed spec:** 15g. Until end of turn, whenever you spend an **attack point**, that attack also hits **all enemies within range 1** of your current hex. **Does not stack** with another Whirlwind.  
+**Confirmed spec:** 15g. Until end of turn, whenever you spend an **attack point**, that attack also hits **all enemies within range 1** of your current hex. **Stacking:** each additional Whirlwind played adds **+1 AoE damage** (AoE only).  
 AoE melee at range 1 is universally useful, clean to understand, and plugs into existing combat without new rules. High impact without breaking economy pacing.
 
 2) **Ambush** — *9/10*  
