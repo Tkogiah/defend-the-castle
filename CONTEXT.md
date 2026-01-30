@@ -52,6 +52,7 @@ Use this checklist on session start or after reload.
 - Animation: movement is step-by-step animated in MVP
 - Movement feel: player can move within a hex; crossing a hex edge requires a small intentional delay to avoid accidental transitions (after isometric visuals)
 - Waves: 10 waves × 10 enemies, boss at end of each wave
+- Enemy scaling: basic enemy HP = wave × 10; boss HP = wave × 100 (final boss 1000 HP)
 - Economy: crystals dropped by enemies; spent at center on cards
 - Economy: on attack, add crystal card to discard equal to the player's ring value (ring is distance from center)
 - Gear: boss loot grants non-deck abilities; tradable on same hex
@@ -76,3 +77,4 @@ Use this checklist on session start or after reload.
 - 2026-01-23: Added detailed movement rules (path, input, animation, enemy interactions, actions).
 - 2026-01-23: Clarified assistant role as coordinator/reviewer/brief-writer and codified commit/push workflow.
 - 2026-01-23: Added explicit architecture/wiring conventions (main.js composition root, folder context + index.js).
+- 2026-01-30: Updated MVP scope to 10 waves with HP scaling (basic = wave×10, boss = wave×100, final boss 1000).

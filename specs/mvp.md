@@ -2,7 +2,7 @@
 
 ## Scope
 - Single-player only
-- One full wave: 10 basic enemies + 1 boss
+- 10 waves total: 10 basic enemies + 1 boss per wave
 - Full 91-hex map (center + 5 rings)
 - Deck system with fixed starter deck and shop
 - Currency (crystals) from enemies; spend at center
@@ -75,9 +75,9 @@
 
 ## Enemies (MVP)
 - 1 basic enemy type
-- 1 boss (end of wave)
-- Basic enemy HP: 10
-- Boss HP: 100
+- 1 boss (end of each wave)
+- Basic enemy HP scales by wave: wave × 10 (10 → 100)
+- Boss HP scales by wave: wave × 100 (100 → 1000)
 
 ## UI (MVP)
 - Board view + hand UI
