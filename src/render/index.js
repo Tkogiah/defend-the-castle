@@ -69,7 +69,7 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
   ctx.scale(view.zoom, view.zoom * ISO_SCALE_Y); // Apply isometric Y compression
 
   // Draw game elements in order: grid → movement range → attack range → enemies → player
-  drawGrid(ctx, state.hexGrid);
+  drawGrid(ctx, state.hexGrid, { showBorders: !overlay?.hideGridBorders });
 
   // Movement range overlay (blue fills)
   const movementRange = getMovementRange(

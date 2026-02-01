@@ -9,13 +9,18 @@ import { axialToPixel } from './util.js';
 
 const HUE_RANGE = 360;
 const SPIRAL = generateRadialSpiralAxial(BOARD_RADIUS);
+const CENTER_OVERLAY_IMAGE = new Image();
+CENTER_OVERLAY_IMAGE.src = './assets/tiles/test_square.png';
+const CENTER_OVERLAY_SIZE = 84;
+const CENTER_OVERLAY_OFFSET_X = 0.5;
 
 /**
  * Draw the hex grid with spiral gradient fill.
  * @param {CanvasRenderingContext2D} ctx
  * @param {Map} hexGrid - map of hex data
  */
-export function drawGrid(ctx, hexGrid) {
+export function drawGrid(ctx, hexGrid, options = {}) {
+  const { showBorders = true } = options;
   for (const hex of hexGrid.values()) {
     const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
     const ring = ringIndex(hex.q, hex.r);
@@ -25,7 +30,28 @@ export function drawGrid(ctx, hexGrid) {
       ? hslToHex((label / SPIRAL.maxLabel) * HUE_RANGE, 80, 55)
       : null;
     const fill = color ? withAlpha(shadeByRing(color, ring), 0.3) : null;
-    drawHex(ctx, x, y, HEX_SIZE, stroke, fill);
+    drawHex(ctx, x, y, HEX_SIZE, stroke, fill, showBorders);
+    if (hex.q === 0 && hex.r === 0 && CENTER_OVERLAY_IMAGE.complete) {
+      ctx.save();
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 180) * (60 * i + 30);
+        const px = x + HEX_SIZE * Math.cos(angle);
+        const py = y + HEX_SIZE * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(
+        CENTER_OVERLAY_IMAGE,
+        x - CENTER_OVERLAY_SIZE / 2 + CENTER_OVERLAY_OFFSET_X,
+        y - CENTER_OVERLAY_SIZE / 2,
+        CENTER_OVERLAY_SIZE,
+        CENTER_OVERLAY_SIZE
+      );
+      ctx.restore();
+    }
   }
 }
 
@@ -39,7 +65,7 @@ export function drawGrid(ctx, hexGrid) {
  * @param {string} strokeStyle - stroke color
  * @param {string|null} fillStyle - base fill color (optional)
  */
-function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
+function drawHex(ctx, x, y, size, strokeStyle, fillStyle, showBorders) {
   const corners = [];
   for (let i = 0; i < 6; i++) {
     // Pointy-top hexes start at 30 degrees
@@ -72,9 +98,11 @@ function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
     ctx.fill();
   }
 
-  ctx.strokeStyle = strokeStyle;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  if (showBorders) {
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
 }
 
 /**
