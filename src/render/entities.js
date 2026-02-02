@@ -8,8 +8,10 @@ import { axialToPixel } from './util.js';
 import { CENTER_OVERLAY_IMAGE, CENTER_OVERLAY_SIZE, CENTER_OVERLAY_OFFSET_X } from './grid.js';
 
 const WARRIOR_IMAGE = new Image();
-WARRIOR_IMAGE.src = './assets/characters//warrior/warrior_south_1.png';
-const WARRIOR_SIZE = 84;
+WARRIOR_IMAGE.src = './assets/sprites/warrior/idle_south/warrior_idle_south.png';
+const WARRIOR_FRAME_SIZE = 84;
+const WARRIOR_FRAMES = 8;
+const WARRIOR_FRAME_DURATION = 0.25;
 const WARRIOR_OFFSET_Y = 6;
 
 // Cylinder height for 3D effect
@@ -31,12 +33,18 @@ export function drawPlayer(ctx, pixelPos) {
     ctx.save();
     ctx.scale(1, 1 / ISO_SCALE_Y);
     const drawY = y * ISO_SCALE_Y;
+    const frameIndex = Math.floor(performance.now() / 1000 / WARRIOR_FRAME_DURATION) % WARRIOR_FRAMES;
+    const sx = frameIndex * WARRIOR_FRAME_SIZE;
     ctx.drawImage(
       WARRIOR_IMAGE,
-      x - WARRIOR_SIZE / 2,
-      drawY - WARRIOR_SIZE + WARRIOR_OFFSET_Y,
-      WARRIOR_SIZE,
-      WARRIOR_SIZE
+      sx,
+      0,
+      WARRIOR_FRAME_SIZE,
+      WARRIOR_FRAME_SIZE,
+      x - WARRIOR_FRAME_SIZE / 2,
+      drawY - WARRIOR_FRAME_SIZE + WARRIOR_OFFSET_Y,
+      WARRIOR_FRAME_SIZE,
+      WARRIOR_FRAME_SIZE
     );
     ctx.restore();
     return;
