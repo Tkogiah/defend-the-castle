@@ -420,7 +420,7 @@ body {
   position: fixed;
   top: 4vh;
   right: 4vw;
-  width: min(72vw, 36rem);
+  width: min(82vw, 42rem);
   height: 92vh;
   background:
     linear-gradient(180deg, rgba(255, 248, 228, 0.98) 0%, rgba(236, 218, 176, 0.98) 100%),
@@ -468,7 +468,7 @@ body {
   padding: 0.75rem;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
@@ -514,6 +514,14 @@ body {
   font-size: 0.85rem;
   color: #5a4522;
   letter-spacing: 0.02em;
+}
+
+.concept-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .stat-row {
