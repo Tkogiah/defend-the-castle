@@ -4,7 +4,7 @@
  */
 
 import { drawGrid } from './grid.js';
-import { drawPlayer, drawEnemies } from './entities.js';
+import { drawEntities } from './entities.js';
 import {
   getMovementRange,
   drawMovementRange,
@@ -96,7 +96,7 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
     drawDragonRange(ctx, state.hexGrid, state.player.position, state.enemies);
   }
 
-  // Entities with animated positions
+  // Entities with animated positions, drawn back-to-front by screen Y
   const enemiesWithVisualPos = (state.enemies || []).map((enemy, index) => {
     const visual = getEnemyVisualPosition(enemy.position, enemy.id ?? index);
     return {
@@ -105,10 +105,8 @@ export function renderFrame(ctx, canvas, state, view, overlay = null) {
       isAnimating: visual.isAnimating,
     };
   });
-  drawEnemies(ctx, enemiesWithVisualPos);
-
   const playerVisualPos = getPlayerVisualPosition(state.player.position);
-  drawPlayer(ctx, playerVisualPos);
+  drawEntities(ctx, enemiesWithVisualPos, playerVisualPos, state.player.position);
 
   if (overlay?.debugPlayer) {
     const debug = getPlayerDebugData(state.player.position);
