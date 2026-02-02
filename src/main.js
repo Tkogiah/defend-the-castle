@@ -139,6 +139,7 @@ function loop() {
         : null,
       dragon: dragonAimActive ? { active: true } : null,
       debugPlayer: debugOverlay.debugPlayer,
+      hideGridBorders: debugOverlay.hideGridBorders,
     });
   });
   requestAnimationFrame(loop);

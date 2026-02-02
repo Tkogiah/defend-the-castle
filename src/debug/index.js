@@ -4,6 +4,7 @@
  */
 
 let debugPlayerOverlay = false;
+let hideGridBorders = false;
 
 /**
  * Register debug hotkeys.
@@ -14,13 +15,14 @@ export function registerDebugHotkeys(win) {
   win.addEventListener('keydown', (e) => {
     if (e.key !== '`') return;
     debugPlayerOverlay = !debugPlayerOverlay;
+    hideGridBorders = !hideGridBorders;
   });
 }
 
 /**
  * Get current debug overlay state for render.
- * @returns {{ debugPlayer: boolean }}
+ * @returns {{ debugPlayer: boolean, hideGridBorders: boolean }}
  */
 export function getDebugOverlay() {
-  return { debugPlayer: debugPlayerOverlay };
+  return { debugPlayer: debugPlayerOverlay, hideGridBorders };
 }

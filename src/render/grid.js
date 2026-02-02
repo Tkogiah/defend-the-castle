@@ -9,23 +9,46 @@ import { axialToPixel } from './util.js';
 
 const HUE_RANGE = 360;
 const SPIRAL = generateRadialSpiralAxial(BOARD_RADIUS);
+export const CENTER_OVERLAY_IMAGE = new Image();
+CENTER_OVERLAY_IMAGE.src = './assets/tiles/test_square.png';
+export const CENTER_OVERLAY_SIZE = 84;
+export const CENTER_OVERLAY_OFFSET_X = -0.2;
+
+// Cached sorted hex draw order (computed once, reused every frame)
+let sortedHexCache = null;
 
 /**
- * Draw the hex grid with spiral gradient fill.
- * @param {CanvasRenderingContext2D} ctx
- * @param {Map} hexGrid - map of hex data
+ * Build and cache the sorted hex draw order (back-to-front by screen Y, then X).
  */
-export function drawGrid(ctx, hexGrid) {
+function getSortedHexes(hexGrid) {
+  if (sortedHexCache) return sortedHexCache;
+  const entries = [];
   for (const hex of hexGrid.values()) {
     const { x, y } = axialToPixel(hex.q, hex.r, HEX_SIZE);
     const ring = ringIndex(hex.q, hex.r);
+    entries.push({ hex, x, y, ring });
+  }
+  entries.sort((a, b) => a.y - b.y || a.x - b.x);
+  sortedHexCache = entries;
+  return entries;
+}
+
+/**
+ * Draw the hex grid with spiral gradient fill (back-to-front).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Map} hexGrid - map of hex data
+ */
+export function drawGrid(ctx, hexGrid, options = {}) {
+  const { showBorders = true } = options;
+  const sorted = getSortedHexes(hexGrid);
+  for (const { hex, x, y, ring } of sorted) {
     const stroke = ring === 0 ? '#d9b86c' : ring === BOARD_RADIUS ? '#3e6b5b' : '#2e4b42';
     const label = SPIRAL.axialToNum.get(hexKey(hex.q, hex.r));
     const color = typeof label === 'number'
       ? hslToHex((label / SPIRAL.maxLabel) * HUE_RANGE, 80, 55)
       : null;
     const fill = color ? withAlpha(shadeByRing(color, ring), 0.3) : null;
-    drawHex(ctx, x, y, HEX_SIZE, stroke, fill);
+    drawHex(ctx, x, y, HEX_SIZE, stroke, fill, showBorders);
   }
 }
 
@@ -39,7 +62,7 @@ export function drawGrid(ctx, hexGrid) {
  * @param {string} strokeStyle - stroke color
  * @param {string|null} fillStyle - base fill color (optional)
  */
-function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
+function drawHex(ctx, x, y, size, strokeStyle, fillStyle, showBorders) {
   const corners = [];
   for (let i = 0; i < 6; i++) {
     // Pointy-top hexes start at 30 degrees
@@ -72,9 +95,11 @@ function drawHex(ctx, x, y, size, strokeStyle, fillStyle) {
     ctx.fill();
   }
 
-  ctx.strokeStyle = strokeStyle;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  if (showBorders) {
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
 }
 
 /**
