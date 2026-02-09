@@ -39,3 +39,5 @@ This is the stable, shared context for all agents. Read once per session. Task b
 - Use 2x or 3x working sizes (98x112 or 147x168).
 - Hold final asset work until board/HEX_SIZE decision is locked.
 
+## Backend Context (Read Once per Session)
+- /Users/tkogiah/ai-workspace/defend-the-castle/docs/backend_context.md
