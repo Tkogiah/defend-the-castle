@@ -1,0 +1,27 @@
+{
+  "name": "defend-the-castle",
+  "version": "1.0.0",
+  "description": "Co-op fantasy deck-building tower defense on a 91-hex map. Defend the central castle against waves while upgrading your deck and gear.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tkogiah/defend-the-castle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Tkogiah/defend-the-castle/issues"
+  },
+  "homepage": "https://github.com/Tkogiah/defend-the-castle#readme",
+  "dependencies": {
+    "ws": "^8.19.0"
+  }
+}

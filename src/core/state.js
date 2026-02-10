@@ -46,7 +46,7 @@ export function createInitialState(hexGrid = new Map()) {
       baseMovement: 3,
       movementPoints: 0,
       baseDamage: 10,
-      range: 2,
+      range: 1,
       attackPoints: 0,
       gold: 100,
       isKnockedOut: false,
