@@ -3,16 +3,37 @@
  * Draws the hex grid with spiral gradient coloring.
  */
 
-import { ringIndex, generateRadialSpiralAxial, hexKey } from '../hex/index.js';
+import { ringIndex, generateRadialSpiralAxial, hexKey, getDirectionFromDelta } from '../hex/index.js';
 import { HEX_SIZE, BOARD_RADIUS } from '../config/index.js';
 import { axialToPixel } from './util.js';
 
 const HUE_RANGE = 360;
 const SPIRAL = generateRadialSpiralAxial(BOARD_RADIUS);
-export const CENTER_OVERLAY_IMAGE = new Image();
-CENTER_OVERLAY_IMAGE.src = './assets/tiles/test_square.png';
-export const CENTER_OVERLAY_SIZE = 84;
-export const CENTER_OVERLAY_OFFSET_X = -0.2;
+
+const PATH_TILE_IMAGE = new Image();
+PATH_TILE_IMAGE.src = './assets/tiles/path_tiles.png';
+const PATH_TILE_SIZE = 56;
+const PATH_TILE_COUNT = 12;
+const PATH_TILE_INDEX = {
+  'W-SW': 0,
+  'W-NE': 1,
+  'NW-E': 2,
+  'NE-SE': 3,
+  'E-SW': 4,
+  'W-E': 5,
+  'W-SE': 6,
+  'NW-SW': 7,
+  'NE-SW': 8,
+  'NW-SE': 9,
+  'E': 10,
+  'W': 11,
+};
+const DIR_ORDER = ['W', 'NW', 'NE', 'E', 'SE', 'SW'];
+const DIR_INDEX = DIR_ORDER.reduce((acc, dir, idx) => {
+  acc[dir] = idx;
+  return acc;
+}, {});
+const OPPOSITE_DIR = { E: 'W', W: 'E', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
 
 // Cached sorted hex draw order (computed once, reused every frame)
 let sortedHexCache = null;
@@ -33,6 +54,32 @@ function getSortedHexes(hexGrid) {
   return entries;
 }
 
+function orderPair(a, b) {
+  if (DIR_INDEX[a] <= DIR_INDEX[b]) return `${a}-${b}`;
+  return `${b}-${a}`;
+}
+
+function getPathTileKey(label) {
+  if (!Number.isInteger(label)) return null;
+  if (label === 0) return 'E';
+  if (label === SPIRAL.maxLabel) return 'W';
+
+  const prev = SPIRAL.numToAxial.get(label - 1);
+  const next = SPIRAL.numToAxial.get(label + 1);
+  if (!prev || !next) return null;
+
+  const cur = SPIRAL.numToAxial.get(label);
+  if (!cur) return null;
+
+  const prevDir = getDirectionFromDelta(cur.q - prev.q, cur.r - prev.r);
+  const nextDir = getDirectionFromDelta(next.q - cur.q, next.r - cur.r);
+  const inDir = prevDir ? OPPOSITE_DIR[prevDir] : null;
+  const outDir = nextDir || null;
+  if (!inDir || !outDir) return null;
+
+  return orderPair(inDir, outDir);
+}
+
 /**
  * Draw the hex grid with spiral gradient fill (back-to-front).
  * @param {CanvasRenderingContext2D} ctx
@@ -49,6 +96,25 @@ export function drawGrid(ctx, hexGrid, options = {}) {
       : null;
     const fill = color ? withAlpha(shadeByRing(color, ring), 0.3) : null;
     drawHex(ctx, x, y, HEX_SIZE, stroke, fill, showBorders);
+
+    if (PATH_TILE_IMAGE.complete && typeof label === 'number') {
+      const key = getPathTileKey(label);
+      const index = key ? PATH_TILE_INDEX[key] : null;
+      if (Number.isInteger(index) && index >= 0 && index < PATH_TILE_COUNT) {
+        const sx = index * PATH_TILE_SIZE;
+        ctx.drawImage(
+          PATH_TILE_IMAGE,
+          sx,
+          0,
+          PATH_TILE_SIZE,
+          PATH_TILE_SIZE,
+          x - PATH_TILE_SIZE / 2,
+          y - PATH_TILE_SIZE / 2,
+          PATH_TILE_SIZE,
+          PATH_TILE_SIZE
+        );
+      }
+    }
   }
 }
 

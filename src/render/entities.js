@@ -5,8 +5,6 @@
 
 import { HEX_SIZE, ISO_SCALE_Y } from '../config/index.js';
 import { axialToPixel } from './util.js';
-import { CENTER_OVERLAY_IMAGE, CENTER_OVERLAY_SIZE, CENTER_OVERLAY_OFFSET_X } from './grid.js';
-
 const WARRIOR_IMAGE = new Image();
 WARRIOR_IMAGE.src = './assets/sprites/warrior/idle_south/warrior_idle_south.png';
 const WARRIOR_FRAME_SIZE = 84;
@@ -78,16 +76,6 @@ export function drawEntities(ctx, enemies, playerPixelPos, playerHex) {
     });
   }
 
-  // Add center overlay (trees on hex 0) as a depth-sorted drawable
-  if (CENTER_OVERLAY_IMAGE.complete) {
-    const center = axialToPixel(0, 0, HEX_SIZE);
-    drawables.push({
-      type: 'overlay-image',
-      x: center.x,
-      y: center.y,
-      sortY: center.y,
-    });
-  }
 
   if (Array.isArray(enemies)) {
     // Separate animating vs static enemies
@@ -160,14 +148,6 @@ export function drawEntities(ctx, enemies, playerPixelPos, playerHex) {
       drawCylinder(ctx, d.x, d.y, radius, ENTITY_HEIGHT, baseColor, strokeColor);
     } else if (d.type === 'enemy-bucket') {
       drawEnemyBucket(ctx, d);
-    } else if (d.type === 'overlay-image') {
-      ctx.drawImage(
-        CENTER_OVERLAY_IMAGE,
-        d.x - CENTER_OVERLAY_SIZE / 2 + CENTER_OVERLAY_OFFSET_X,
-        d.y - CENTER_OVERLAY_SIZE / 2,
-        CENTER_OVERLAY_SIZE,
-        CENTER_OVERLAY_SIZE
-      );
     }
   }
 }
