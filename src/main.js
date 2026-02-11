@@ -69,10 +69,10 @@ let fireballHoverHex = null;
 let dragonAimActive = false;
 registerDebugHotkeys(window);
 const socket = createSocket({
-  onState: (nextState) => {
-    if (!nextState) return;
-    state = nextState;
-    emitStateChanged();
+  name: 'Player',
+  onState: (serverState) => {
+    if (!serverState) return;
+    console.log('[Net state]', serverState);
   },
   onError: (message) => {
     console.warn('[Net]', message);
