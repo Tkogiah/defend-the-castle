@@ -17,6 +17,10 @@ Co-op fantasy deck-building tower defense on a 91-hex map. Defend the central ca
 ## How to Run (Local)
 - Open `index.html` in a browser, or use a simple static server.
 
+## Backend (Local, Experimental)
+- Start server: `node server/index.cjs`
+- Client: open `index.html` in a browser
+
 ## Architecture at a Glance
 - `main.js` is the only composition root.
 - Modules: `core/`, `render/`, `input/`, `ui/`, `hex/`, `data/`, `config/`.

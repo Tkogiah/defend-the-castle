@@ -41,6 +41,7 @@ The existing `core/` rules should be reused on the server to enforce consistency
 - **Unit tests** for core rules (pure functions).
 - **Integration test** for WebSocket flow (join room → action → snapshot).
 - **GitHub Actions** to run tests on push/PR.
+- **Node config**: root `package.json` uses `"type": "module"`; server entry is `server/index.cjs`.
 
 **Reasons**
 - Demonstrates professional engineering habits.
