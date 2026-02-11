@@ -49,6 +49,7 @@ import {
 } from './ui/index.js';
 import { registerDebugHotkeys, getDebugOverlay } from './debug/index.js';
 import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y, FIT_PADDING } from './config/index.js';
+import { createSocket } from './net/index.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -67,6 +68,16 @@ let fireballAimActive = false;
 let fireballHoverHex = null;
 let dragonAimActive = false;
 registerDebugHotkeys(window);
+const socket = createSocket({
+  onState: (nextState) => {
+    if (!nextState) return;
+    state = nextState;
+    emitStateChanged();
+  },
+  onError: (message) => {
+    console.warn('[Net]', message);
+  },
+});
 emitStateChanged();
 
 function withErrorBoundary(label, fn) {

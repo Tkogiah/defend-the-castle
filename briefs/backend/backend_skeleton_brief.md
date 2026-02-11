@@ -20,7 +20,7 @@ Stand up a minimal Node.js WebSocket server that hosts rooms (max 3 players), ke
 - No main.js edits unless explicitly approved.
 
 ## Inputs / Context
-- /Users/tkogiah/ai-workspace/defend-the-castle/docs/backend_context.md
+- /Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md
 - /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md
 - /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md
 - /Users/tkogiah/ai-workspace/defend-the-castle/README.md
@@ -47,4 +47,3 @@ Stand up a minimal Node.js WebSocket server that hosts rooms (max 3 players), ke
 - Message schema: JSON shape for action intents and snapshots.
 - Room creation: auto-assign or explicit room codes?
 - Player identity: temporary session ID or persistent user ID?
-

@@ -10,13 +10,21 @@ wss.on('connection', (ws) => {
   console.log('New client connected');
   
   // Send a welcome message to the client
-  ws.send('Welcome to the WebSocket server!');
+  ws.send(JSON.stringify({ type: 'hello' }));
 
   // Message event handler
   ws.on('message', (message) => {
-    console.log(`Received: ${message}`);
-    // Echo the message back to the client
-    ws.send(`Server received: ${message}`);
+    const text = message.toString();
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (err) {
+      ws.send(JSON.stringify({ type: 'error', message: 'Invalid JSON' }));
+      return;
+    }
+    console.log('Received:', payload);
+    // Echo the parsed message back to the client
+    ws.send(JSON.stringify({ type: 'echo', payload }));
   });
 
   // Close event handler
