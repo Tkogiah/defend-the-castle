@@ -6,6 +6,8 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - (empty)
 
 ## Next
+- Add unit tests for core rules (movement, attack/crystal reward, wave/boss HP scaling, end-turn flow).
+- Add unit tests for hex pathing (spiral labels, neighbors, path length).
 - Fill out MVP_ASSET_LIST.md (asset requirements for Stage 7).
 - Test touch drag-to-move on mobile and map drag direction to the 6 path directions.
 - Add merchant card detail view (tap to read effect before buy), mobile-first.
