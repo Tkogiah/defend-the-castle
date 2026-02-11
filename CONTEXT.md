@@ -19,7 +19,8 @@ Use this checklist on session start or after reload.
 8) Read: /Users/tkogiah/ai-workspace/defend-the-castle/README.md (high-level framing).
 9) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md (staged MVP plan).
 10) Read: /Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md (backend architecture context).
-11) If folders are split, read each folder’s index.js to understand wiring.
+11) Read: /Users/tkogiah/ai-workspace/defend-the-castle/TESTING_CONTEXT.md (workflow + CI/testing guardrails).
+12) If folders are split, read each folder’s index.js to understand wiring.
    - index.js files define module boundaries, wiring, and public APIs. Read these first in each folder.
    - Smaller module files contain focused logic only.
 
