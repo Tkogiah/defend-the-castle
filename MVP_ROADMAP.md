@@ -67,3 +67,12 @@ Definition of Done
 - Pixel art tiles + units + UI frames replace placeholders.
 - Basic move/attack/death animations exist.
 - SFX for card play/move/attack/hit/death; 1 music loop.
+
+## Stage 8 — Multiplayer Expansion (Post-MVP)
+Scope: multiplayer foundations and multiple characters.
+
+Definition of Done
+- Authoritative server supports multiple players with separate state (hands/gear/turns).
+- Join/ready/character-select flow exists.
+- Basic lobby state is broadcast to all clients.
+- Multiplayer round-trip action sync is stable (join → action → snapshot).

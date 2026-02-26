@@ -36,6 +36,7 @@ This is a portfolio-grade game project built to demonstrate clear architecture, 
 - `specs/mvp.md`: MVP rules and scope
 - `TESTING_CONTEXT.md`: workflow and CI/testing guardrails
 - `MVP_ROADMAP.md`: staged plan
+- `docs/ROADMAP.md`: task roadmap (replaces TODO.md)
 
 ## Local Development
 - Open `index.html` in a browser, or use a static server.

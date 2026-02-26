@@ -13,8 +13,9 @@ Single canonical entry point for agents and collaborators. Keep this file short,
 7) `/Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md` (authoritative server plan)
 8) `/Users/tkogiah/ai-workspace/defend-the-castle/README.md` (public framing)
 9) `/Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md` (staged plan)
-10) `/Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md` (latest session state)
-11) `/Users/tkogiah/ai-workspace/defend-the-castle/TODO.md` (active tasks)
+10) `/Users/tkogiah/ai-workspace/defend-the-castle/docs/ROADMAP.md` (task roadmap)
+11) `/Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md` (latest session state)
+12) `/Users/tkogiah/ai-workspace/defend-the-castle/TODO.md` (legacy pointer only)
 
 ## Module Contexts (Read Only When Working in That Module)
 - `/Users/tkogiah/ai-workspace/defend-the-castle/src/core/context.md`
