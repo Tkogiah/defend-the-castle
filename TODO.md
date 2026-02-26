@@ -16,6 +16,8 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Fix boss defeat flow: next wave enemies should not all remain stacked on spawn hex.
 
 ## Later
+- Refactor UI display stats to use core/ rules (remove UI duplication): `src/ui/index.js` `getEffectiveDisplayDamage`/`getEffectiveDisplaySpeed` duplicate `src/core/rules.js` `getEffectiveDamage`/`getEffectiveSpeed`; risk of divergence if gear logic changes. (Task 0.5 Concern 1)
+- Audit `ISO_SCALE_Y` usage in `src/input/movement.js`: render-domain constant imported into input module; acceptable for MVP but worth consolidating if isometric tuning changes. (Task 0.5 Concern 2)
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.
 - Define a richer debug mode checklist (overlay toggles, hitboxes, state inspectors).
 - Update attack targeting to respect player.range (needed for archer range 3 and future classes).
