@@ -1,86 +1,47 @@
 # Project Context — Defend the Castle
 
 ## Purpose
-Single source of truth for this project. Keep concise and current.
+Single canonical entry point for agents and collaborators. Keep this file short, stable, and pointer-driven.
 
-## How To Update
-- Update after decisions affecting gameplay, tech stack, or architecture.
-- Keep entries short and dated (YYYY-MM-DD).
+## Read Order (Canonical)
+1) `/Users/tkogiah/ai-workspace/defend-the-castle/AGENTS.md` (roles, workflow, guardrails)
+2) `/Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md` (module boundaries + wiring)
+3) `/Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md` (MVP rules + scope)
+4) `/Users/tkogiah/ai-workspace/defend-the-castle/TESTING_CONTEXT.md` (process + CI/testing guardrails)
+5) `/Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md` (authoritative server plan)
+6) `/Users/tkogiah/ai-workspace/defend-the-castle/README.md` (public framing)
+7) `/Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md` (staged plan)
+8) `/Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md` (latest session state)
+9) `/Users/tkogiah/ai-workspace/defend-the-castle/TODO.md` (active tasks)
 
-## Context Reload Template (for assistants)
-Use this checklist on session start or after reload.
-1) Read: /Users/tkogiah/ai-workspace/defend-the-castle/CONTEXT.md (this file).
-2) Read: /Users/tkogiah/ai-workspace/defend-the-castle/AGENTS.md (roles, guardrails, workflow).
-3) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md (module boundaries + wiring rules).
-4) Read: /Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md (last session state).
-5) Read: /Users/tkogiah/ai-workspace/defend-the-castle/TODO.md (current tasks).
-6) Read: /Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md.
-7) Read: /Users/tkogiah/ai-workspace/defend-the-castle/NOTES.md (recent notes).
-8) Read: /Users/tkogiah/ai-workspace/defend-the-castle/README.md (high-level framing).
-9) Read: /Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md (staged MVP plan).
-10) Read: /Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md (backend architecture context).
-11) Read: /Users/tkogiah/ai-workspace/defend-the-castle/TESTING_CONTEXT.md (workflow + CI/testing guardrails).
-12) If folders are split, read each folder’s index.js to understand wiring.
-   - index.js files define module boundaries, wiring, and public APIs. Read these first in each folder.
-   - Smaller module files contain focused logic only.
+## Module Contexts (Read Only When Working in That Module)
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/core/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/render/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/input/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/ui/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/hex/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/data/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/config/context.md`
+- `/Users/tkogiah/ai-workspace/defend-the-castle/src/net/context.md`
 
-## Context Update Review Workflow
-1) Propose the update in plain language (what changed + why).
-2) I confirm or revise the wording.
-3) Apply the approved update to this file with today’s date.
-4) If it’s high-level architecture, reflect it in specs as needed.
+## Task Briefs (Process API)
+- Brief templates live in `/Users/tkogiah/ai-workspace/defend-the-castle/docs/task_briefs/`
+- Use a “plan request → plan” format for non-trivial tasks.
+- Name briefs as `TASK_<number>_<short_name>_PLAN_REQUEST.md` and `TASK_<number>_<short_name>_PLAN.md`.
 
-## Briefing Checklist (for agent tasks)
-- Working directory (absolute path).
-- Files allowed (absolute paths).
-- Scope type: data-only vs logic-only vs rendering-only vs input-only.
-- MVP-only guardrail + any non-negotiables (e.g., flat-top hexes, DPR handling).
-- Expected outputs (summary, files touched, open questions, risks).
+## Current Snapshot (Keep Short)
+- Concept: co-op fantasy deck-building tower defense on a hex map.
+- Stack: HTML/CSS/JS + Canvas 2D (mobile-first).
+- Architecture: `main.js` is the only composition root; module boundaries enforced by `MODULE_MAP.md`.
+- Core loop: play cards → move/attack → collect crystals → return center → buy cards → repeat.
+- Movement: fixed spiral path; rules defined in `specs/mvp.md`.
+- Backend: authoritative WebSocket server planned; full snapshots for MVP (see `BACKEND_CONTEXT.md`).
+- Workflow: brief → branch → implement → test → PR → merge (see `TESTING_CONTEXT.md`).
 
-## Current Snapshot
-- Concept: Co-op fantasy deck-building tower defense on a hex map; defend central castle vs waves
-- Stack: HTML, CSS, JavaScript, Canvas 2D
-- Backend: Node.js planned later; multiplayer likely via WebSockets
-- Core loop: play cards → move/attack → collect crystals → return center → buy cards → repeat
-- Map: 91 hexes (center + 5 rings); players can traverse outward or inward
-- Movement: fixed clockwise path; no free movement (except mounts like Dragon)
-- Movement: counter-clockwise also allowed to return to center (same path, reverse direction)
-- Path: single spiral labels hexes 0..90; players move along label ±1; enemies start at label 90 and move counter-clockwise
-- Movement: path follows the rainbow gradient color fill across hexes (entire map path)
-- Movement: spiral path source is `generateRadialSpiralAxial(5)` in `src/hex.js` and the rainbow gradient render in `src/render.js` uses the same label order
-- Movement: points spent per hex; player may stop early and can move/attack in any order until actions are spent
-- Movement: player may pass through enemy hexes but cannot end on enemy hex; if enemy reaches player hex, player dies
-- Movement: players can share hexes with other players for gear trading; movement is never blocked
-- Input: click-to-move up to available movement points along path; keyboard supports step-by-step movement
-- Animation: movement is step-by-step animated in MVP
-- Movement feel: player can move within a hex; crossing a hex edge requires a small intentional delay to avoid accidental transitions (after isometric visuals)
-- Waves: 10 waves × 10 enemies, boss at end of each wave
-- Enemy scaling: basic enemy HP = wave × 10; boss HP = wave × 100 (final boss 1000 HP)
-- Economy: crystals dropped by enemies; spent at center on cards
-- Economy: on attack, add crystal card to discard equal to the player's ring value (ring is distance from center)
-- Gear: boss loot grants non-deck abilities; tradable on same hex
-- Win/Lose: win by defeating final boss; lose if any enemy reaches center
-- Knockout: player dies if an enemy enters their hex
-- View: 2D isometric (possible future map rotation)
-- Board orientation: pointy-top hexes; overall board silhouette should read as flat-top.
-- State: deck/hand/discard are stored on player (state.player.*), not top-level.
-- Workflow: assistant acts as coordinator/reviewer/brief-writer; do not implement code unless explicitly asked
-- Workflow: other agents implement code; assistant reviews and connects changes
-- Workflow: code changes are committed and pushed to GitHub after approval
-- Workflow: main.js is Codex-owned; other agents do not edit main.js unless the brief explicitly allows it
-- Architecture & wiring: main.js is the single composition root; it wires folder index.js public APIs
-- Architecture & wiring: each folder contains context.md (intent + rules) and index.js (wiring + public exports)
-- Architecture & wiring: refactor workflow = update folder context first, then code, then update wiring in main.js
-- Cards: draw uses discard reshuffle whenever the deck is empty (including mid-draw from effects)
-- Cards: all merchant cards can be used for their effect OR as an action-mode card to grant +1 attack point or +1 move point
-- Cards: crystal cards can be trashed outside hex 0 for 0 gold (no conversion required)
+## Update Rules
+- Update this file only when architecture, workflow, or MVP scope changes.
+- Do not duplicate rules already defined in `specs/mvp.md` or module contexts.
+- Use `SESSION_SUMMARY.md` for session notes and `NOTES.md` for rough ideas.
 
 ## Recent Updates
-- 2026-01-21: Set initial stack and backend direction.
-- 2026-01-21: Captured core gameplay loop and boardgame-derived structure.
-- 2026-01-21: Clarified hex orientation (pointy-top tiles, flat-top board silhouette).
-- 2026-01-23: Added detailed movement rules (path, input, animation, enemy interactions, actions).
-- 2026-01-23: Clarified assistant role as coordinator/reviewer/brief-writer and codified commit/push workflow.
-- 2026-01-23: Added explicit architecture/wiring conventions (main.js composition root, folder context + index.js).
-- 2026-01-30: Updated MVP scope to 10 waves with HP scaling (basic = wave×10, boss = wave×100, final boss 1000).
-- 2026-01-30: Added merchant action-mode rule and crystal trash rule (no gold) for deck-building flexibility.
+- 2026-02-26: Reframed CONTEXT.md as a pointer-driven API and added task brief workflow entry.
