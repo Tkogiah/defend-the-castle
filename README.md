@@ -2,50 +2,53 @@
 
 Co-op fantasy deck-building tower defense on a 91-hex map. Defend the central castle against waves while upgrading your deck and gear.
 
+## Why This Exists
+This is a portfolio-grade game project built to demonstrate clear architecture, testable game rules, and multiplayer-ready backend design while keeping the gameplay fun and readable.
+
 ## Current Status
 - MVP implementation in progress (core loop, isometric render, UI, cards, gear, waves).
-- Stack: HTML, CSS, JavaScript, Canvas 2D.
-- Backend planned later (likely Node.js + WebSockets for multiplayer).
+- Stack: HTML, CSS, JavaScript, Canvas 2D (mobile-first).
+- Backend: Node.js + WebSockets planned; authoritative server model is the target.
 
-## High-Level Goals
-- Design-first: keep architecture and scope decisions at the highest useful level.
-- Session target: ~60 minutes, low math overhead, strong pacing across waves.
-- Core loop clarity: play cards -> move/attack -> collect crystals -> return to center -> buy cards.
-- Spatial tension: distance from center should feel rewarding and risky.
-- Co-op emphasis: choices should encourage teamwork and trade-offs.
+## Core Loop
+- Play cards
+- Move/attack on the spiral path
+- Collect crystals and return to center
+- Buy cards and gear
+- Survive waves and defeat bosses
 
-## How to Run (Local)
-- Open `index.html` in a browser, or use a simple static server.
+## MVP Feature Set (Snapshot)
+- 10 waves, boss at end of each wave
+- Fixed spiral path movement (clockwise/counter-clockwise)
+- Deck/hand/discard system with merchant shop
+- Gear items with non-deck effects
+- Win/lose conditions enforced in core rules
 
-## Backend (Local, Experimental)
-- Start server: `node server/index.cjs`
-- Client: open `index.html` in a browser
-
-## Architecture at a Glance
+## Architecture Highlights
 - `main.js` is the only composition root.
-- Modules: `core/`, `render/`, `input/`, `ui/`, `hex/`, `data/`, `config/`.
-- Full boundaries: see `MODULE_MAP.md`.
+- Modules are bounded (`core/`, `render/`, `input/`, `ui/`, `hex/`, `data/`, `config/`, `net/`).
+- Core rules are pure functions; render and input are side-effect-only.
+- Multiplayer design uses authoritative server snapshots (see `BACKEND_CONTEXT.md`).
 
-## Where Decisions Live
-- `CONTEXT.md`: source of truth for project decisions.
-- `DECISIONS.md`: log of durable decisions.
-- `MVP_ROADMAP.md`: staged MVP plan.
+## Project Map
+- `CONTEXT.md`: canonical entry point
+- `MODULE_MAP.md`: module boundaries and wiring rules
+- `specs/mvp.md`: MVP rules and scope
+- `TESTING_CONTEXT.md`: workflow and CI/testing guardrails
+- `MVP_ROADMAP.md`: staged plan
 
-## Priority Decisions (MVP)
-1) Turn model:
-   - Selected: Strict turn-based (player phase -> enemy phase).
-2) Pacing targets:
-   - Selected: Fixed enemy movement bounds per wave (tight control).
-3) Visual framing:
-   - Selected: Center-locked camera with pan/zoom for readability.
+## Local Development
+- Open `index.html` in a browser, or use a static server.
+- Experimental backend: `node server/index.cjs`
 
-## Priority Decisions (Post-MVP)
-1) Turn model:
-   - Option B: Hybrid cadence (turn-based with limited within-hex real-time feel).
-2) Pacing targets:
-   - Option B: Scaling bounds by ring or wave (dynamic difficulty).
-3) Visual framing:
-   - Option B: Fixed camera with full board visible.
-4) Co-op layer:
-   - Option A: Mostly shared goals, minimal combo actions.
-   - Option B: Explicit co-op mechanics (trades, buffs, or linked abilities).
+## Testing / CI
+- Tests run via `npm test` (Node test runner).
+- CI runs on push/PR to `main`.
+
+## Decisions
+MVP decisions and future options are tracked in:
+- `CONTEXT.md`
+- `DECISIONS.md`
+
+## Roadmap
+See `MVP_ROADMAP.md` for staged MVP delivery.
