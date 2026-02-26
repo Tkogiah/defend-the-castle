@@ -17,6 +17,7 @@ Allowed imports (→ means "may import from")
 - render → hex, config
 - input → hex, config
 - ui → data, config
+- net → (none)
 - hex → config
 - data → (none)
 - config → (none)
@@ -88,6 +89,21 @@ Forbidden
 Read when working on this module
 - /Users/tkogiah/ai-workspace/defend-the-castle/src/ui/context.md
 - /Users/tkogiah/ai-workspace/defend-the-castle/src/ui/index.js
+
+## net/
+Responsibility
+- Client-side networking for multiplayer: connect to WebSocket server, send intents, receive snapshots.
+Inputs
+- Connection params + callbacks.
+Outputs
+- Outbound intents, inbound full snapshots.
+Exports
+- createSocket, protocol helpers.
+Forbidden
+- Game rules, rendering, DOM.
+Read when working on this module
+- /Users/tkogiah/ai-workspace/defend-the-castle/src/net/context.md
+- /Users/tkogiah/ai-workspace/defend-the-castle/src/net/index.js
 
 ## hex/
 Responsibility
