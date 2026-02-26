@@ -138,6 +138,7 @@ export function startEnemyAnimations(moves, onComplete = null) {
 
   // Reset enemy animation state
   enemyAnims.clear();
+  enemyFrozenPositions.clear();
   enemyQueue = moves.map(m => ({
     enemyId: m.enemyId,
     path: m.path,
@@ -146,6 +147,15 @@ export function startEnemyAnimations(moves, onComplete = null) {
   enemyStaggerTimer = 0;
   enemyAnimCallback = onComplete;
   nextEnemyIndex = 0;
+  enemyFrozenClearAt = null;
+
+  // Freeze all enemies at their starting positions to avoid snap-to-final flicker
+  for (const entry of enemyQueue) {
+    const start = entry.path[0];
+    if (start) {
+      enemyFrozenPositions.set(entry.enemyId, { ...start });
+    }
+  }
 
   // Start first enemy immediately
   startNextEnemyHop(enemyQueue[0]);

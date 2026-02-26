@@ -1,3 +1,42 @@
+# Session Summary — 2026-02-11 — Backend sync, CI setup, tests, and context consolidation.
+
+Key progress
+- Consolidated context: moved backend context to `BACKEND_CONTEXT.md`, removed `tech/GLOBAL_CONTEXT_BRIEF.md`, added `AGENTS.md` and `TESTING_CONTEXT.md` to `CONTEXT.md` read order.
+- Added CI: GitHub Actions workflow runs `npm ci` + `npm test`; switched to Node’s `--test` runner with smoke test.
+- Added core/hex unit tests (ESM): `test/core.test.mjs`, `test/hex.test.mjs`; package now `"type": "module"`, server entry renamed to `server/index.cjs`.
+- Implemented authoritative server snapshots and client sync on `backend-sync` branch: server applies actions, broadcasts full state; client sends intents with local fallback when offline.
+- Restored movement animations from server snapshots: enemy moves animate without flicker; player movement follows spiral path, dragon snaps on adjacent moves; disabled within-hex drift in multiplayer mode.
+- Added spawn snapshots to avoid first-turn enemy/boss teleporting before animation.
+
+Files touched (high level)
+- `server/index.cjs`
+- `src/main.js`
+- `src/net/client.js`
+- `src/render/animation.js`
+- `package.json`
+- `test/core.test.mjs`
+- `test/hex.test.mjs`
+- `test/smoke.test.cjs`
+- `.github/workflows/ci.yml`
+- `README.md`
+- `BACKEND_CONTEXT.md`
+- `CONTEXT.md`
+- `TESTING_CONTEXT.md`
+- `AGENTS.md`
+- `tech/agent-brief-state-rules.md`
+- `briefs/backend/core_hex_tests_brief.md`
+
+Branch / PR status
+- Working branch: `backend-sync` (pushed to origin). PR created but not merged yet.
+
+Known issues / fixes in progress
+- Multiplayer still shares a single `state.player`; next milestone is per-player state and character selection.
+
+Next job reminder
+- Merge `backend-sync` after CI/approval.
+- Create new branch for multi-player state (separate player hands/gear/turns).
+- Add join/ready/character-select flow on top of authoritative server.
+
 # Session Summary — 2026-01-30 — Merchant action-mode, crystal trash flow, Whirlwind, movement sync, and branch sync.
 
 Key progress

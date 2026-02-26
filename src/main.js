@@ -30,6 +30,7 @@ import {
   getDirectionFromDelta,
   buildSpiralPath,
   resolveStepForDirection,
+  areAxialNeighbors,
 } from './hex/index.js';
 import {
   renderFrame,
@@ -49,7 +50,7 @@ import {
 } from './ui/index.js';
 import { registerDebugHotkeys, getDebugOverlay } from './debug/index.js';
 import { HEX_SIZE, BOARD_RADIUS, ISO_SCALE_Y, FIT_PADDING } from './config/index.js';
-import { createSocket } from './net/index.js';
+import { createSocket, actionMessage, endTurnMessage } from './net/index.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -67,11 +68,51 @@ let enemyPhaseInProgress = false;
 let fireballAimActive = false;
 let fireballHoverHex = null;
 let dragonAimActive = false;
+let roomState = null;
+let hasServerState = false;
 registerDebugHotkeys(window);
 const socket = createSocket({
-  onState: (nextState) => {
-    if (!nextState) return;
+  name: 'Player',
+  onState: (serverState) => {
+    if (!serverState?.state?.player) {
+      console.warn('[Net] Invalid server state payload', serverState);
+      return;
+    }
+    const prevState = hasServerState ? state : null;
+    const nextState = {
+      ...serverState.state,
+      hexGrid: state.hexGrid,
+    };
+    if (prevState) {
+      const prevPos = prevState.player.position;
+      const nextPos = nextState.player.position;
+      if (
+        prevPos.q !== nextPos.q ||
+        prevPos.r !== nextPos.r
+      ) {
+        resetPlayerDrift();
+        setPlayerHeldDirection(null);
+        if (!isAnimatingPlayer()) {
+          if (areAxialNeighbors(prevPos.q, prevPos.r, nextPos.q, nextPos.r)) {
+            startPlayerAnimation(prevPos, nextPos);
+          } else {
+            const path = buildSpiralPath(prevPos, nextPos);
+            if (path.length > 2) {
+              startPlayerPathAnimation(path);
+            } else {
+              startPlayerAnimation(prevPos, nextPos);
+            }
+          }
+        }
+      }
+      const enemyMoves = buildEnemyMoves(prevState, nextState);
+      if (enemyMoves.length && !isAnimatingEnemies()) {
+        startEnemyAnimations(enemyMoves);
+      }
+    }
     state = nextState;
+    roomState = serverState.room || null;
+    hasServerState = true;
     emitStateChanged();
   },
   onError: (message) => {
@@ -79,6 +120,26 @@ const socket = createSocket({
   },
 });
 emitStateChanged();
+
+function sendAction(action, payload = {}) {
+  if (!socket) return false;
+  return socket.send(actionMessage(action, payload));
+}
+
+function startPlayerPathAnimation(path) {
+  if (!Array.isArray(path) || path.length < 2) return;
+  let index = 0;
+  const step = () => {
+    if (index >= path.length - 1) return;
+    const from = path[index];
+    const to = path[index + 1];
+    startPlayerAnimation(from, to, () => {
+      index += 1;
+      step();
+    });
+  };
+  step();
+}
 
 function withErrorBoundary(label, fn) {
   try {
@@ -233,6 +294,15 @@ setPlayerBoundaryCallback((direction) => {
   const toHex = resolveStepForDirection(state.player.position, direction);
   if (!toHex) return { valid: false };
 
+  if (hasServerState) {
+    sendAction('move', { target: toHex });
+    return { valid: false };
+  }
+
+  if (sendAction('move', { target: toHex })) {
+    return { valid: false };
+  }
+
   const nextState = movePlayer(state, toHex);
   const moved =
     nextState.player.position.q !== state.player.position.q ||
@@ -253,6 +323,10 @@ setPlayerBoundaryCallback((direction) => {
 function handleMoveToHex(target) {
   if (isAnimatingPlayer()) return;
   if (dragonAimActive) {
+    if (sendAction('dragonMove', { target })) {
+      setDragonAim(false);
+      return;
+    }
     const nextState = useAdjacentMove(state, target);
     if (nextState !== state) {
       state = nextState;
@@ -273,6 +347,7 @@ function handleMoveToHex(target) {
   );
   if (hasEnemy) {
     if (isAnimatingEnemies()) return;
+    if (sendAction('attack', { target })) return;
     state = tryAttackAtHex(state, target);
     emitStateChanged();
     return;
@@ -282,11 +357,19 @@ function handleMoveToHex(target) {
   setPlayerHeldDirection(null);
   resetPlayerDrift();
 
+  if (sendAction('move', { target })) return;
   const path = buildSpiralPath(state.player.position, target);
   startPlayerMoveSequence(path);
 }
 
 function handleMoveDirection(direction) {
+  if (hasServerState) {
+    if (direction && dragonAimActive) {
+      setDragonAim(false);
+    }
+    setPlayerHeldDirection(null);
+    return;
+  }
   if (direction && dragonAimActive) {
     setDragonAim(false);
   }
@@ -334,10 +417,12 @@ function handleFireballAction() {
   } else if (fireballHoverHex) {
     // Cast fireball at selected target
     if (isAnimatingEnemies()) return;
-    const nextState = useFireball(state, fireballHoverHex);
-    if (nextState !== state) {
-      state = nextState;
-      emitStateChanged();
+    if (!sendAction('fireball', { target: fireballHoverHex })) {
+      const nextState = useFireball(state, fireballHoverHex);
+      if (nextState !== state) {
+        state = nextState;
+        emitStateChanged();
+      }
     }
     setFireballAim(false);
   } else {
@@ -389,6 +474,7 @@ function handleEndTurnKey(e) {
     if (state.phase !== 'playerTurn') return;
     if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
     e.preventDefault();
+    if (socket && socket.send(endTurnMessage())) return;
     beginEnemyPhaseWithAnimation();
   });
 }
@@ -409,6 +495,7 @@ window.addEventListener('card-played', (e) => {
   withErrorBoundary('card-played', () => {
     const { cardId, action } = e.detail || {};
     if (!cardId) return;
+    if (sendAction('playCard', { cardId, cardAction: action })) return;
 
     const card = state.player.hand.find((c) => c.id === cardId);
     if (!card) return;
@@ -438,6 +525,7 @@ window.addEventListener('end-turn', () => {
     if (document.body.classList.contains('merchant-open')) return;
     if (state.phase !== 'playerTurn') return;
     if (isAnimatingPlayer() || isAnimatingEnemies() || enemyPhaseInProgress) return;
+    if (socket && socket.send(endTurnMessage())) return;
     beginEnemyPhaseWithAnimation();
   });
 });
@@ -446,6 +534,7 @@ window.addEventListener('crystal-sold', (e) => {
   withErrorBoundary('crystal-sold', () => {
     const { cardId, value } = e.detail || {};
     if (!cardId || !Number.isFinite(value)) return;
+    if (sendAction('sellCrystal', { cardId, value })) return;
     state = removeCardFromHand(state, cardId);
     state = addPlayerGold(state, value);
     emitStateChanged();
@@ -456,6 +545,7 @@ window.addEventListener('merchant-buy', (e) => {
   withErrorBoundary('merchant-buy', () => {
     const { cardType } = e.detail || {};
     if (!cardType) return;
+    if (sendAction('buyMerchant', { cardType })) return;
     state = buyMerchantCard(state, cardType);
     emitStateChanged();
   });
@@ -465,6 +555,7 @@ window.addEventListener('gear-equip', (e) => {
   withErrorBoundary('gear-equip', () => {
     const { instanceId } = e.detail || {};
     if (!instanceId) return;
+    if (sendAction('equipGear', { instanceId })) return;
     state = equipGear(state, instanceId);
     emitStateChanged();
   });
@@ -474,6 +565,7 @@ window.addEventListener('gear-unequip', (e) => {
   withErrorBoundary('gear-unequip', () => {
     const { slot } = e.detail || {};
     if (!slot) return;
+    if (sendAction('unequipGear', { slot })) return;
     state = unequipGear(state, slot);
     emitStateChanged();
   });
@@ -484,6 +576,7 @@ window.addEventListener('dragon-move', (e) => {
     const { targetHex } = e.detail || {};
     if (!targetHex) return;
     if (isAnimatingPlayer() || isAnimatingEnemies()) return;
+    if (sendAction('dragonMove', { target: targetHex })) return;
     const nextState = useAdjacentMove(state, targetHex);
     if (nextState !== state) {
       state = nextState;
@@ -497,6 +590,7 @@ window.addEventListener('fireball-cast', (e) => {
     const { centerHex } = e.detail || {};
     if (!centerHex) return;
     if (isAnimatingEnemies()) return;
+    if (sendAction('fireball', { target: centerHex })) return;
     const nextState = useFireball(state, centerHex);
     if (nextState !== state) {
       state = nextState;
