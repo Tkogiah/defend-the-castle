@@ -31,6 +31,12 @@ Single canonical entry point for agents and collaborators. Keep this file short,
 - Use a “plan request → plan” format for non-trivial tasks.
 - Name briefs as `TASK_<number>_<short_name>_PLAN_REQUEST.md` and `TASK_<number>_<short_name>_PLAN.md`.
 
+## Decision Log (ADRs)
+- Durable architecture decisions are recorded as ADRs in `/Users/tkogiah/ai-workspace/defend-the-castle/docs/adr/`.
+- ADRs are reference material — do not add them to the session read order.
+- Template: `docs/adr/ADR_TEMPLATE.md`
+- ADR-001: Authoritative server + full state snapshots (`docs/adr/ADR_001_authoritative_server_full_snapshots.md`)
+
 ## Current Snapshot (Keep Short)
 - Concept: co-op fantasy deck-building tower defense on a hex map.
 - Stack: HTML/CSS/JS + Canvas 2D (mobile-first).
@@ -48,3 +54,4 @@ Single canonical entry point for agents and collaborators. Keep this file short,
 ## Recent Updates
 - 2026-02-26: Reframed CONTEXT.md as a pointer-driven API and added task brief workflow entry.
 - 2026-02-26: Added docs/PROJECT_INTENT.md and docs/ARCHITECTURE.md to read order (Task 0.2).
+- 2026-02-26: Added Decision Log section + ADR template + ADR-001 (Task 0.4).
