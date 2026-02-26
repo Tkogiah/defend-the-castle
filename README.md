@@ -39,7 +39,8 @@ This is a portfolio-grade game project built to demonstrate clear architecture, 
 
 ## Local Development
 - Open `index.html` in a browser, or use a static server.
-- Experimental backend: `node server/index.cjs`
+- Experimental backend: `node server/index.cjs` (also serves static files at `http://localhost:8080`)
+- Mobile / remote testing: see `docs/MOBILE_TESTING.md`
 
 ## Testing / CI
 - Tests run via `npm test` (Node test runner).

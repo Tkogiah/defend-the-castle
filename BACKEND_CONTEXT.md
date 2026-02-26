@@ -47,6 +47,21 @@ The existing `core/` rules should be reused on the server to enforce consistency
 - Demonstrates professional engineering habits.
 - Provides confidence as multiplayer complexity grows.
 
+## Minimal Deployment Target
+
+**Recommended: Railway.app**
+
+Railway is the minimal deploy target for mobile/remote testing and portfolio demos.
+
+- Supports Node.js with persistent WebSocket connections (no cold starts on paid tier; free tier is sufficient for testing).
+- Start command: `node server/index.cjs` — serves static files and WebSocket on a single port.
+- Railway auto-provisions HTTPS/WSS; the dynamic WebSocket URL in `src/net/client.js` handles `wss://` automatically.
+- No build step required.
+
+**Why not Render?** Render's free tier spins down after inactivity, which kills persistent WebSocket connections. Acceptable for HTTP APIs, not for a game server.
+
+For full setup steps, see `docs/MOBILE_TESTING.md`.
+
 ## Action Flow
 
 Each player action follows this exact path:
