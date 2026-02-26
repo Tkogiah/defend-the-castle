@@ -1,6 +1,63 @@
+const http = require('http');
+const fs = require('fs');
 const WebSocket = require('ws');
 const path = require('path');
 const { pathToFileURL } = require('url');
+
+// -----------------------------
+// Static File Server Setup
+// -----------------------------
+
+const PROJECT_ROOT = path.resolve(__dirname, '..');
+
+const ALLOWED_EXTENSIONS = new Set([
+  '.html', '.css', '.js', '.json',
+  '.png', '.jpg', '.svg', '.ico', '.woff', '.woff2',
+]);
+
+const MIME_TYPES = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
+
+const httpServer = http.createServer((req, res) => {
+  let urlPath = (req.url || '/').split('?')[0];
+  if (urlPath === '/') urlPath = '/index.html';
+
+  // Resolve to absolute path and enforce project root boundary
+  const filePath = path.resolve(PROJECT_ROOT, urlPath.slice(1));
+  if (!filePath.startsWith(PROJECT_ROOT + path.sep)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  // Extension allowlist
+  const ext = path.extname(filePath).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404);
+      res.end('Not Found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+    res.end(data);
+  });
+});
 
 function toFileUrl(relativePath) {
   return pathToFileURL(path.join(__dirname, relativePath)).href;
@@ -36,10 +93,12 @@ function toFileUrl(relativePath) {
   } = core;
   const { generateHexGrid } = hex;
 
-  // Create a WebSocket server on port 8080
-  const wss = new WebSocket.Server({ port: 8080 });
+  // Attach WebSocket server to the shared HTTP server
+  const wss = new WebSocket.Server({ server: httpServer });
 
-  console.log('WebSocket server is running on ws://localhost:8080');
+  httpServer.listen(8080, () => {
+    console.log('Server running on http://localhost:8080');
+  });
 
   let nextPlayerId = 1;
   const roomState = {

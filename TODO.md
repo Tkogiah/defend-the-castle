@@ -16,6 +16,8 @@ Short, actionable items only. Keep high-level items at top; break down later.
 - Fix boss defeat flow: next wave enemies should not all remain stacked on spawn hex.
 
 ## Later
+- Harden static server path handling: consider decodeURIComponent on URL paths before resolve to prevent encoded traversal edge cases. (Task 1.0A optional)
+- Expand static server allowlist only when needed (e.g., audio types like .mp3/.ogg). (Task 1.0A optional)
 - Refactor UI display stats to use core/ rules (remove UI duplication): `src/ui/index.js` `getEffectiveDisplayDamage`/`getEffectiveDisplaySpeed` duplicate `src/core/rules.js` `getEffectiveDamage`/`getEffectiveSpeed`; risk of divergence if gear logic changes. (Task 0.5 Concern 1)
 - Audit `ISO_SCALE_Y` usage in `src/input/movement.js`: render-domain constant imported into input module; acceptable for MVP but worth consolidating if isometric tuning changes. (Task 0.5 Concern 2)
 - Redesign hand UI: replace drawer with clickable deck that opens a 5-card wheel (center card highest/primary, cards 2&4 lower/lighter, cards 1&5 lowest/most opaque); smooth open/close to avoid jarring transitions.

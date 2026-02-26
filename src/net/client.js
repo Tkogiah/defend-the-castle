@@ -2,7 +2,9 @@
   import { MSG, joinMessage } from './protocol.js';
 
   export function createSocket({ name, onState, onError } = {}) {
-    const ws = new WebSocket('ws://localhost:8080');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || 'localhost:8080'; // fallback for file:// access
+    const ws = new WebSocket(`${protocol}//${host}`);
     let isOpen = false;
 
     ws.onopen = () => {
