@@ -47,3 +47,7 @@ Fast on-ramp for new Codex/agent sessions. Read in order.
 ## Workflow Reminder
 - After any project file updates, offer to commit changes to git.
 - Brief workflow: send task brief with a proposed execution plan (3-6 bullet points), get approval, then request implementation. Do not send execution briefs.
+
+## Task Brief Expectations (All Agents)
+- For plan requests: draft a PLAN only, no implementation or file edits.
+- PLAN should include: goal, ordered steps, files to touch, testing, risks/assumptions.
