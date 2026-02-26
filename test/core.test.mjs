@@ -14,6 +14,17 @@ import {
   setPlayerPosition,
   setPlayerMovementPoints,
   setPlayerAttackPoints,
+  startPlayerTurn,
+  endPlayerTurn,
+  drawCards,
+  checkLoseCondition,
+  checkWinCondition,
+  playActionCard,
+  setPlayerKnockedOut,
+  updateWave,
+  setDeck,
+  setDiscard,
+  setHand,
 } from '../src/core/index.js';
 import { generateHexGrid, getSpiralAxial } from '../src/hex/index.js';
 
@@ -190,4 +201,135 @@ test('core: getBossHP returns wave * 100', () => {
 test('core: final boss (wave 10) has 1000 HP', () => {
   const hp = getBossHP(10);
   assert.equal(hp, 1000, 'wave 10 boss should have 1000 HP');
+});
+
+// -----------------------------
+// End-Turn Flow Tests
+// -----------------------------
+
+test('core: startPlayerTurn sets phase to playerTurn and draws 5 cards', () => {
+  // Clear hand first — initial state has a pre-loaded crystal card; normal flow
+  // always calls endPlayerTurn (which discards hand) before startPlayerTurn.
+  let state = createTestState();
+  state = setHand(state, []);
+  const newState = startPlayerTurn(state);
+
+  assert.equal(newState.phase, 'playerTurn', 'phase should be playerTurn');
+  assert.equal(newState.player.hand.length, 5, 'should draw 5 cards');
+});
+
+test('core: startPlayerTurn resets attack and movement points to 0', () => {
+  let state = createTestState();
+  state = setPlayerAttackPoints(state, 5);
+  state = setPlayerMovementPoints(state, 10);
+  const newState = startPlayerTurn(state);
+
+  assert.equal(newState.player.attackPoints, 0, 'attack points should reset to 0');
+  assert.equal(newState.player.movementPoints, 0, 'movement points should reset to 0');
+});
+
+test('core: endPlayerTurn sets phase to enemyTurn and empties hand into discard', () => {
+  let state = createTestState();
+  state = startPlayerTurn(state); // draws 5 cards
+  const handCount = state.player.hand.length;
+  const discardBefore = state.player.discard.length;
+
+  const newState = endPlayerTurn(state);
+
+  assert.equal(newState.phase, 'enemyTurn', 'phase should be enemyTurn');
+  assert.equal(newState.player.hand.length, 0, 'hand should be empty after end turn');
+  assert.equal(
+    newState.player.discard.length,
+    discardBefore + handCount,
+    'discarded cards should be in discard pile'
+  );
+});
+
+test('core: drawCards reshuffles discard when deck is empty', () => {
+  let state = createTestState();
+  // Empty the deck and put cards in discard
+  const fakeCards = [
+    { id: 'c1', type: 'action', value: 1 },
+    { id: 'c2', type: 'action', value: 1 },
+    { id: 'c3', type: 'action', value: 1 },
+  ];
+  state = setDeck(state, []);
+  state = setDiscard(state, fakeCards);
+  state = setHand(state, []);
+
+  const newState = drawCards(state, 3);
+
+  assert.equal(newState.player.hand.length, 3, 'should draw 3 cards after reshuffle');
+  assert.equal(newState.player.discard.length, 0, 'discard should be empty after reshuffle');
+});
+
+// -----------------------------
+// Win / Lose Condition Tests
+// -----------------------------
+
+test('core: checkLoseCondition returns lose when player is knocked out', () => {
+  let state = createTestState();
+  state = setPlayerKnockedOut(state, true);
+
+  const newState = checkLoseCondition(state);
+
+  assert.equal(newState.outcome, 'lose', 'should be lose when player is knocked out');
+});
+
+test('core: checkLoseCondition returns lose when enemy reaches center', () => {
+  let state = createTestState();
+  state = addEnemy(state, { q: 0, r: 0 });
+
+  const newState = checkLoseCondition(state);
+
+  assert.equal(newState.outcome, 'lose', 'should be lose when enemy reaches center');
+});
+
+test('core: checkWinCondition returns win at wave 10 with boss defeated', () => {
+  let state = createTestState();
+  state = updateWave(state, { current: 10, bossDefeated: true });
+
+  const newState = checkWinCondition(state);
+
+  assert.equal(newState.outcome, 'win', 'should be win at wave 10 with boss defeated');
+});
+
+test('core: checkWinCondition does not trigger before wave 10', () => {
+  let state = createTestState();
+  state = updateWave(state, { current: 9, bossDefeated: true });
+
+  const newState = checkWinCondition(state);
+
+  assert.notEqual(newState.outcome, 'win', 'should not win before wave 10');
+});
+
+// -----------------------------
+// Action Card Tests
+// -----------------------------
+
+test('core: playActionCard with attack grants 1 attack point', () => {
+  let state = createTestState();
+  state = startPlayerTurn(state); // draws action cards
+  const card = state.player.hand.find((c) => c.type === 'action');
+  assert.ok(card, 'should have an action card in hand');
+
+  const newState = playActionCard(state, card.id, 'attack');
+
+  assert.equal(newState.player.attackPoints, 1, 'should gain 1 attack point');
+  assert.equal(
+    newState.player.hand.find((c) => c.id === card.id),
+    undefined,
+    'played card should leave hand'
+  );
+});
+
+test('core: playActionCard with movement grants movement points', () => {
+  let state = createTestState();
+  state = startPlayerTurn(state); // draws action cards
+  const card = state.player.hand.find((c) => c.type === 'action');
+  assert.ok(card, 'should have an action card in hand');
+
+  const newState = playActionCard(state, card.id, 'movement');
+
+  assert.ok(newState.player.movementPoints > 0, 'should gain movement points');
 });

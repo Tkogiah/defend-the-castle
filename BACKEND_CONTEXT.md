@@ -47,7 +47,33 @@ The existing `core/` rules should be reused on the server to enforce consistency
 - Demonstrates professional engineering habits.
 - Provides confidence as multiplayer complexity grows.
 
+## Action Flow
+
+Each player action follows this exact path:
+
+```
+1. Client captures input (click / key / card play)
+2. input/ emits intent callback → main.js
+3. main.js sends intent to server via src/net/client.js (WebSocket message)
+   e.g. { type: 'action', action: 'move', target: { q, r } }
+4. server/index.cjs receives message, validates action type and payload
+5. Server applies action through shared core/ rule function
+   e.g. gameState = movePlayer(gameState, target)
+6. Server broadcasts full state snapshot to all connected clients
+   e.g. { type: 'state', state: gameState, room: roomState }
+7. Each client receives snapshot → main.js applies it as authoritative state
+8. render/ and ui/ update from new state
+```
+
+**Offline fallback**: if the WebSocket is not open, `client.js` returns `false` on `send()`. `main.js` falls back to applying the action locally so single-player still works without a server.
+
+## Turn Readiness Gate (Multiplayer)
+- During player phase, each player's actions are applied immediately and broadcast.
+- Enemy phase runs only after **all** connected players have sent `{ type: 'endTurn' }`.
+- The server tracks `roomState.players`; the turn gate will check that all players have confirmed before calling `applyEndTurnWithSnapshots()`.
+- *(Note: full per-player turn gate is pending the multi-player state milestone.)*
+
 ## Documentation Goals
-- Explain why authoritative server and snapshots were chosen.
-- Document action flow: client intent → server validate → state update → broadcast.
-- Document turn readiness gate (all players end turn → enemy phase).
+- ~~Document action flow~~ — done above.
+- ~~Document turn readiness gate~~ — documented above (implementation pending).
+- Explain why authoritative server and snapshots were chosen — see "Architecture Choice" and "State Sync Strategy" sections above.

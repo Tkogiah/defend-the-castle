@@ -5,14 +5,16 @@ Single canonical entry point for agents and collaborators. Keep this file short,
 
 ## Read Order (Canonical)
 1) `/Users/tkogiah/ai-workspace/defend-the-castle/AGENTS.md` (roles, workflow, guardrails)
-2) `/Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md` (module boundaries + wiring)
-3) `/Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md` (MVP rules + scope)
-4) `/Users/tkogiah/ai-workspace/defend-the-castle/TESTING_CONTEXT.md` (process + CI/testing guardrails)
-5) `/Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md` (authoritative server plan)
-6) `/Users/tkogiah/ai-workspace/defend-the-castle/README.md` (public framing)
-7) `/Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md` (staged plan)
-8) `/Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md` (latest session state)
-9) `/Users/tkogiah/ai-workspace/defend-the-castle/TODO.md` (active tasks)
+2) `/Users/tkogiah/ai-workspace/defend-the-castle/docs/PROJECT_INTENT.md` (what, why, success criteria)
+3) `/Users/tkogiah/ai-workspace/defend-the-castle/MODULE_MAP.md` (module boundaries + wiring)
+4) `/Users/tkogiah/ai-workspace/defend-the-castle/docs/ARCHITECTURE.md` (module map summary + data flow)
+5) `/Users/tkogiah/ai-workspace/defend-the-castle/specs/mvp.md` (MVP rules + scope)
+6) `/Users/tkogiah/ai-workspace/defend-the-castle/TESTING_CONTEXT.md` (process + CI/testing guardrails)
+7) `/Users/tkogiah/ai-workspace/defend-the-castle/BACKEND_CONTEXT.md` (authoritative server plan)
+8) `/Users/tkogiah/ai-workspace/defend-the-castle/README.md` (public framing)
+9) `/Users/tkogiah/ai-workspace/defend-the-castle/MVP_ROADMAP.md` (staged plan)
+10) `/Users/tkogiah/ai-workspace/defend-the-castle/SESSION_SUMMARY.md` (latest session state)
+11) `/Users/tkogiah/ai-workspace/defend-the-castle/TODO.md` (active tasks)
 
 ## Module Contexts (Read Only When Working in That Module)
 - `/Users/tkogiah/ai-workspace/defend-the-castle/src/core/context.md`
@@ -45,3 +47,4 @@ Single canonical entry point for agents and collaborators. Keep this file short,
 
 ## Recent Updates
 - 2026-02-26: Reframed CONTEXT.md as a pointer-driven API and added task brief workflow entry.
+- 2026-02-26: Added docs/PROJECT_INTENT.md and docs/ARCHITECTURE.md to read order (Task 0.2).

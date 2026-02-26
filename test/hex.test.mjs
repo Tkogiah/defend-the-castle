@@ -13,6 +13,8 @@ import {
   generateHexGrid,
   hexCountForRadius,
   ringIndex,
+  neighborsOfLabel,
+  getHexesByRing,
 } from '../src/hex/index.js';
 
 // -----------------------------
@@ -91,5 +93,56 @@ test('hex: hexCountForRadius formula is correct', () => {
   const expected = [1, 7, 19, 37, 61, 91];
   for (let r = 0; r <= 5; r++) {
     assert.equal(hexCountForRadius(r), expected[r], `hexCountForRadius(${r})`);
+  }
+});
+
+// -----------------------------
+// Path / Neighbor Label Tests
+// -----------------------------
+
+test('hex: neighborsOfLabel for center (label 0) includes label 1', () => {
+  // neighborsOfLabel returns { dir, n, q, r } objects; check via .n property
+  const spiral = generateRadialSpiralAxial(5);
+  const neighbors = neighborsOfLabel(0, spiral);
+  assert.ok(neighbors.some((nb) => nb.n === 1), 'center neighbors should include label 1');
+});
+
+test('hex: neighborsOfLabel returns only valid board labels', () => {
+  const spiral = generateRadialSpiralAxial(5);
+  const neighbors = neighborsOfLabel(45, spiral);
+  for (const nb of neighbors) {
+    assert.ok(nb.n >= 0 && nb.n <= 90, `neighbor label ${nb.n} should be in range 0..90`);
+  }
+});
+
+test('hex: ring 5 contains 30 hexes', () => {
+  const hexGrid = generateHexGrid(5);
+  const ring5 = getHexesByRing(hexGrid, 5);
+  assert.equal(ring5.length, 30, 'ring 5 should contain 30 hexes');
+});
+
+test('hex: ring 1 contains 6 hexes', () => {
+  const hexGrid = generateHexGrid(5);
+  const ring1 = getHexesByRing(hexGrid, 1);
+  assert.equal(ring1.length, 6, 'ring 1 should contain 6 hexes');
+});
+
+test('hex: outer ring hex has fewer than 6 valid neighbors', () => {
+  const hexGrid = generateHexGrid(5);
+  // label 90 is on the outer ring
+  const pos = getSpiralAxial(90, 5);
+  const neighbors = getValidNeighbors(pos.q, pos.r, hexGrid);
+  assert.ok(neighbors.length < 6, 'outer ring hex should have fewer than 6 valid neighbors');
+});
+
+test('hex: all hexes on ring 5 have fewer than 6 valid neighbors', () => {
+  const hexGrid = generateHexGrid(5);
+  const ring5 = getHexesByRing(hexGrid, 5);
+  for (const hex of ring5) {
+    const neighbors = getValidNeighbors(hex.q, hex.r, hexGrid);
+    assert.ok(
+      neighbors.length < 6,
+      `ring 5 hex (${hex.q},${hex.r}) should have fewer than 6 valid neighbors`
+    );
   }
 });
